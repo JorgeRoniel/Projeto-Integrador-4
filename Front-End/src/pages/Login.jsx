@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
-function Login({ setView, logoEscura, logoClara }) {
+function Login({ logoEscura, logoClara }) {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({ usuario: '', senha: '' });
     const [errors, setErrors] = useState({});
 
@@ -28,7 +30,7 @@ function Login({ setView, logoEscura, logoClara }) {
 
         // Se passou na validação
         toast.success('Login realizado com sucesso!');
-        setTimeout(() => setView('catalogo'), 500);
+        setTimeout(() => navigate('/catalogo'), 500);
     };
 
     const handleChange = (field, value) => {
@@ -98,7 +100,7 @@ function Login({ setView, logoEscura, logoClara }) {
 
                         <button
                             type="button"
-                            onClick={() => setView('recuperar')}
+                            onClick={() => navigate('/recuperar-senha')}
                             className="text-sm underline text-gray-500 block hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-[#001b4e] focus:ring-offset-2 rounded"
                         >
                             Esqueceu sua senha?
@@ -117,7 +119,7 @@ function Login({ setView, logoEscura, logoClara }) {
                 <img src={logoClara} alt="Logo da Biblioteca" className="w-64 mb-8" />
                 <p className="text-lg mb-8">Novo na nossa plataforma? Cadastre-se agora.</p>
                 <button
-                    onClick={() => setView('cadastro')}
+                    onClick={() => navigate('/cadastro')}
                     className="bg-white text-[#001b4e] px-16 py-3 rounded-full font-bold hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#001b4e]"
                 >
                     CADASTRAR

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import {useLocation} from 'react-router-dom';
 import { Search } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -6,12 +7,7 @@ import logoEscura from './assets/logo-branco.png';
 import logoClara from './assets/logo-roxa.png';
 
 import Sidebar from './components/Sidebar';
-import Login from './pages/Login';
-import Cadastro from './pages/Cadastro';
-import RecuperarSenha from './pages/RecuperarSenha';
-import Confirmacao from './pages/Confirmacao';
-import Catalogo from './pages/Catalogo';
-import ListaDesejo from './pages/ListaDesejo';
+import AppRoutes from './routes';
 
 // Base de dados mockada de livros
 const LIVROS_DISPONIVEIS = [
@@ -25,7 +21,7 @@ const LIVROS_DISPONIVEIS = [
 ];
 
 function App() {
-  const [view, setView] = useState('login');
+  const location = useLocation();
 
   //Armazenamos os livros adicionados na lista de desejo
   const [wishlist, setWishlist] = useState([]);
@@ -51,19 +47,7 @@ function App() {
     setWishlist(wishlist.filter(livro => livro.id !== id));
   };
 
-  const isAppView = ['dashboard', 'catalogo', 'meus-livros', 'lista-desejo'].includes(view);
-
-  const renderContent = () => {
-    switch (view) {
-      case 'login': return <Login setView={setView} logoEscura={logoEscura} logoClara={logoClara} />;
-      case 'cadastro': return <Cadastro setView={setView} logoEscura={logoEscura} logoClara={logoClara} />;
-      case 'recuperar': return <RecuperarSenha setView={setView} logoEscura={logoEscura} />;
-      case 'confirmacao': return <Confirmacao setView={setView} />;
-      case 'catalogo': return <Catalogo livros={LIVROS_DISPONIVEIS} onAdd={adicionarALista} />;
-      case 'lista-desejo': return <ListaDesejo wishlist={wishlist} onRemove={removerDaLista} />;
-      default: return <div className="p-10 text-center font-bold">Página em construção...</div>;
-    }
-  };
+  const isAppView = ['/dashboard', '/catalogo', '/meus-livros', '/lista-desejo'].includes(location.pathname);
 
   return (
     <div className="min-h-screen w-full bg-white font-sans flex overflow-hidden">
@@ -72,10 +56,9 @@ function App() {
       {/*Tela que você vai após o login */}
       {isAppView && (
         <div className="flex w-full h-screen overflow-hidden animate-in fade-in">
-          <Sidebar view={view} setView={setView} logoClara={logoClara} />
+          <Sidebar logoClara={logoClara} />
 
           <main className="flex-1 h-screen overflow-y-auto p-10 bg-white">
-
             {/*A barra de busca no topo da página*/}
             <div className="max-w-5xl mx-auto relative mb-12">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -86,12 +69,30 @@ function App() {
               />
             </div>
 
-            {renderContent()}
+            <AppRoutes
+              wishlist={wishlist}
+              setWishlist={setWishlist}
+              adicionarALista={adicionarALista}
+              removerDaLista={removerDaLista}
+              logoEscura={logoEscura}
+              logoClara={logoClara}
+              livros={LIVROS_DISPONIVEIS}
+            />
           </main>
         </div>
       )}
 
-      {!isAppView && renderContent()}
+      {!isAppView && (
+        <AppRoutes
+          wishlist={wishlist}
+          setWishlist={setWishlist}
+          adicionarALista={adicionarALista}
+          removerDaLista={removerDaLista}
+          logoEscura={logoEscura}
+          logoClara={logoClara}
+          livros={LIVROS_DISPONIVEIS}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
-function Cadastro({ setView, logoEscura, logoClara }) {
+function Cadastro({ logoEscura, logoClara }) {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         nome: '',
         sobrenome: '',
@@ -65,7 +67,7 @@ function Cadastro({ setView, logoEscura, logoClara }) {
 
         // Se passou na validação
         toast.success('Cadastro realizado com sucesso!');
-        setTimeout(() => setView('login'), 500);
+        setTimeout(() => navigate('/login'), 500);
     };
 
     const handleChange = (field, value) => {
@@ -83,7 +85,7 @@ function Cadastro({ setView, logoEscura, logoClara }) {
                 <img src={logoClara} alt="Logo da Biblioteca" className="w-64 mb-8" />
                 <p className="text-lg mb-8 text-center leading-relaxed">Já tem uma conta? <br /> Então entre.</p>
                 <button
-                    onClick={() => setView('login')}
+                    onClick={() => navigate('/login')}
                     className="bg-white text-[#001b4e] px-16 py-3 rounded-full font-bold hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#001b4e]"
                 >
                     ENTRAR

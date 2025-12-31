@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
-function RecuperarSenha({ setView, logoEscura }) {
+function RecuperarSenha({ logoEscura }) {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
 
@@ -27,7 +29,7 @@ function RecuperarSenha({ setView, logoEscura }) {
 
         // Se passou na validação
         toast.success('Link de recuperação enviado!');
-        setTimeout(() => setView('confirmacao'), 500);
+        setTimeout(() => navigate('/confirmacao'), 500);
     };
 
     const handleChange = (value) => {
@@ -76,7 +78,7 @@ function RecuperarSenha({ setView, logoEscura }) {
             </form>
 
             <button
-                onClick={() => setView('login')}
+                onClick={() => navigate('/login')}
                 className="mt-6 flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-[#001b4e] focus:ring-offset-2 rounded px-2 py-1"
             >
                 <ArrowLeft size={16} /> Voltar

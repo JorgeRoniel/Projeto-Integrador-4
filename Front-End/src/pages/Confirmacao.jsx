@@ -1,7 +1,9 @@
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-function Confirmacao({ setView }) {
+function Confirmacao() {
+    const navigate = useNavigate();
     return (
         /*Tela de confirmação de que o email foi enviado para o email de quem está tentando recuperar a senha*/
         <div className="flex w-full h-screen flex-col items-center justify-center animate-in zoom-in">
@@ -10,7 +12,7 @@ function Confirmacao({ setView }) {
                 <h1 className="text-3xl font-bold text-[#001b4e] mb-2">Email enviado!</h1>
                 <p className="text-gray-600 mb-6">Verifique sua caixa de entrada para redefinir sua senha.</p>
                 <button
-                    onClick={() => setView('login')}
+                    onClick={() => navigate('/login')}
                     className="w-full bg-[#001b4e] text-white py-3 rounded-xl font-bold mt-6 hover:bg-[#002a6e] transition-colors focus:outline-none focus:ring-2 focus:ring-[#001b4e] focus:ring-offset-2"
                 >
                     ENTENDI
