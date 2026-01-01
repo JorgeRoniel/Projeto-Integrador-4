@@ -1,6 +1,7 @@
 import React from 'react';
 import { PlusCircle, ChevronRight } from 'lucide-react';
 
+
 function Catalogo({ livros, onAdd }) {
   return (
     /*Tela de catalogo de livros com destaques da semana e o que você pode gostar */
