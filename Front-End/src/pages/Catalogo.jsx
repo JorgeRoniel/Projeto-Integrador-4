@@ -1,44 +1,124 @@
 import React from 'react';
 import { PlusCircle, ChevronRight } from 'lucide-react';
-
+import BookCard from '../components/BookCard';
 
 function Catalogo({ livros, onAdd }) {
+  // Livros em destaque com imagens reais
+  const destaques = [
+    {
+      id: 101,
+      titulo: "Batman: The Dark Knight",
+      autor: "Frank Miller",
+      capa: "https://images.unsplash.com/photo-1608889476561-6242cfdbf622?w=400&h=600&fit=crop",
+      avaliacao: 5
+    },
+    {
+      id: 102,
+      titulo: "Seven Husbands of Evelyn Hugo",
+      autor: "Taylor Jenkins Reid",
+      capa: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop",
+      avaliacao: 5
+    },
+    {
+      id: 103,
+      titulo: "Harry Potter e a Pedra Filosofal",
+      autor: "J.K. Rowling",
+      capa: "https://images.unsplash.com/photo-1551029506-0807df4e2031?w=400&h=600&fit=crop",
+      avaliacao: 5
+    }
+  ];
+  // Livros recomendados com imagens reais
+  const recomendacoes = [
+    {
+      id: 201,
+      titulo: "The Black Wolf",
+      autor: "Louise Penny",
+      capa: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop",
+      avaliacao: 4
+    },
+    {
+      id: 202,
+      titulo: "Boom Town",
+      autor: "Nic Stone",
+      capa: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&h=600&fit=crop",
+      avaliacao: 4
+    },
+    {
+      id: 203,
+      titulo: "And Then There Was One",
+      autor: "Martha Waters",
+      capa: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
+      avaliacao: 5
+    },
+    {
+      id: 204,
+      titulo: "Tom's Crossing",
+      autor: "Mark Z. Danielewski",
+      capa: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop",
+      avaliacao: 3
+    },
+    {
+      id: 205,
+      titulo: "The Bone Thief",
+      autor: "Vanessa Lillie",
+      capa: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?w=400&h=600&fit=crop",
+      avaliacao: 4
+    },
+    {
+      id: 206,
+      titulo: "O Senhor dos Anéis",
+      autor: "J.R.R. Tolkien",
+      capa: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=600&fit=crop",
+      avaliacao: 5
+    },
+    {
+      id: 207,
+      titulo: "1984",
+      autor: "George Orwell",
+      capa: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop",
+      avaliacao: 5
+    }
+  ];
+
+
   return (
     /*Tela de catalogo de livros com destaques da semana e o que você pode gostar */
     <div className="max-w-6xl mx-auto animate-in slide-in-from-bottom-4">
-      <h2 className="text-2xl font-bold text-[#001b4e] mb-8">Destaques da semana</h2>
+      {/* Destaques da semana */}
+      <h2 className="text-3xl font-bold text-[#001b4e] mb-8">Destaques da semana</h2>
+
       <div className="flex gap-8 items-center overflow-x-auto pb-6 scrollbar-hide">
-        
-        {livros.slice(0, 3).map((livro) => (
-          <div key={livro.id} className={`relative min-w-[300px] h-[320px] ${livro.cor} rounded-[35px] border-l-[12px] border-[#001b4e] overflow-hidden shadow-xl`}>
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent p-10 flex flex-col justify-end">
-              <h3 className="text-white font-bold text-xl">{livro.titulo}</h3>
-              <p className="text-white/80">{livro.autor}</p>
-              <PlusCircle 
-                className="absolute bottom-6 right-6 text-blue-400 cursor-pointer hover:scale-110 transition-transform" 
-                size={40} 
-                onClick={() => onAdd(livro)}
+        {destaques.map((livro) => (
+          <div key={livro.id} className="min-w-[300px]">
+            <BookCard 
+              livro={livro}
+              size="large"
+              showRating={false}
+              showTitle={true}
+              showAuthor={true}
+              actionButton={<PlusCircle className="text-blue-400" size={32} />}
+              onAction={() => onAdd(livro)}
               />
-            </div>
           </div>
         ))}
+
         <ChevronRight className="shrink-0 bg-[#001b4e] text-white p-3 rounded-full cursor-pointer ml-4 shadow-lg" size={50} />
       </div>
 
-      <h2 className="text-2xl font-bold text-[#001b4e] mt-12 mb-8">Livros que você pode gostar</h2>
+      {/* Livros que você pode gostar */}
+      <h2 className="text-3xl font-bold text-[#001b4e] mt-12 mb-8">Livros que você pode gostar</h2>
+
       <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide">
-        {livros.map((livro) => (
-          <div key={livro.id} className="min-w-[180px] flex flex-col gap-2 group cursor-pointer relative">
-            <div className={`aspect-[2/3] ${livro.cor} rounded-[20px] border-2 border-[#001b4e] overflow-hidden relative`}>
-              <button 
-                onClick={() => onAdd(livro)}
-                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <PlusCircle className="text-white" size={40} />
-              </button>
-            </div>
-            <p className="font-bold text-sm text-[#001b4e] truncate">{livro.titulo}</p>
-            <p className="text-xs text-[#001b4e] font-bold ">{livro.autor}</p>
+        {recomendacoes.map((livro) => (
+          <div key={livro.id} className="min-w-[180px]">
+            <BookCard 
+              livro={livro}
+              showRating={false}
+              showTitle={true}
+              showAuthor={true}
+              actionButton={<PlusCircle size={32} />}
+              onAction={() => onAdd(livro)}
+              />
           </div>
         ))}
       </div>
