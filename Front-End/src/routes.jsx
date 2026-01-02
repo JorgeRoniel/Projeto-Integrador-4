@@ -5,6 +5,7 @@ import RecuperarSenha from './pages/RecuperarSenha';
 import Confirmacao from './pages/Confirmacao';
 import Catalogo from './pages/Catalogo';
 import ListaDesejo from './pages/ListaDesejo';
+import MeusLivros from './pages/MeusLivros';
 
 
 function AppRoutes({
@@ -20,7 +21,7 @@ function AppRoutes({
             <Route path="/catalogo" element={<Catalogo livros={livros} onAdd={adicionarALista} />} />
             <Route path="/lista-desejo" element={<ListaDesejo wishlist={wishlist} onRemove={removerDaLista} />} />
             <Route path="/dashboard" element={<div className="p-10 text-center font-bold">Página em construção...</div>} />
-            <Route path="/meus-livros" element={<div className="p-10 text-center font-bold">Página em construção...</div>} />
+            <Route path="/meus-livros" element={<MeusLivros />} />
 
             <Route path='/' element={<Navigate to='/login' replace />} />
 
