@@ -14,14 +14,14 @@ import java.time.ZoneOffset;
 @Service
 public class TokenService {
 
-    private String secret;
+    private String secret = "T3ST3";
 
     public String generateToken(User user){
         try {
             Algorithm alg = Algorithm.HMAC256(secret);
             String token = JWT.create()
                     .withIssuer("library_app")
-                    .withSubject(user.getPassword())
+                    .withSubject(user.getEmail())
                     .withExpiresAt(generateExpirationDate())
                     .sign(alg);
             return token;

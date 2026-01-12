@@ -25,6 +25,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PostMapping("/login")
     public ResponseEntity login(@RequestBody LoginUserDTO data){
         String token = services.login(data);
         if(token.isEmpty()){

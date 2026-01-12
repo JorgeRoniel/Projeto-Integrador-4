@@ -9,6 +9,7 @@ import com.ufc.APIlibrary.services.user.UserServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,11 +29,13 @@ public class UserServicesImpl implements UserServices {
     @Override
     public String login(LoginUserDTO data) {
         var emailpass = new UsernamePasswordAuthenticationToken(data.email(), data.senha());
-        var auth = authenticationManager.authenticate(emailpass);
-        if(auth.getPrincipal() == null){
+        try {
+            var auth = authenticationManager.authenticate(emailpass);
+            return tokenService.generateToken((User) auth.getPrincipal());
+        } catch (AuthenticationException e){
+            System.out.println(e.getMessage());
             return "";
         }
-        return tokenService.generateToken((User) auth.getPrincipal());
     }
 
     @Override
