@@ -1,0 +1,42 @@
+package com.ufc.APIlibrary.domain.Book;
+
+
+import com.ufc.APIlibrary.domain.User.User;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.io.Serializable;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "books_rating")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class BookRating implements Serializable {
+
+    @EmbeddedId
+    private BookRatingId id;
+
+    @ManyToOne
+    @MapsId("UserId")
+    @JoinColumn(name = "id")
+    private User user;
+
+    @ManyToOne
+    @MapsId("BookId")
+    @JoinColumn(name = "id")
+    private Book book;
+
+    @Column(nullable = false)
+    private Integer rating;
+
+    @Column(length = 255)
+    private String review;
+
+    private LocalDate review_date;
+}
