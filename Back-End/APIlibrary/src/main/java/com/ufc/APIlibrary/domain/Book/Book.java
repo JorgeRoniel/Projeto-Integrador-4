@@ -20,39 +20,27 @@ public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+
     private Integer id;
-
-    @Column(nullable = false)
     private String title;
-
-    @Column(nullable = false)
     private String author;
-
     private String publisher;
-
     private String edition;
-
     private Integer date_publication;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
-            name = "books_categories",
+            name = "book_categories",
             joinColumns = @JoinColumn(name = "id")
     )
-    @Column(name = "genero")
+
     private List<String> categories = new ArrayList<>();
 
-    @Column(length = 255)
+
     private String description;
-
-    @Column(name = "preview_picture")
     private byte[] preview_picture;
-
-    /* Campos derivados de avaliações */
     private Integer sum_ratings = 0;
     private Integer reviews_count = 0;
     private Float rating_avg = 0f;
-
     private LocalDate acquision_date;
 }

@@ -20,12 +20,12 @@ public class WishList {
 
     @ManyToOne
     @MapsId("UserId")
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
     @MapsId("BookId")
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "book_id")
     private Book book;
 
     @Column(nullable = false)
