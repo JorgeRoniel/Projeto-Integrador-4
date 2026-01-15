@@ -39,4 +39,12 @@ public class BookRating implements Serializable {
     private String review;
 
     private LocalDate review_date;
+
+    public BookRating(User user, Book book, Integer rating, String review) {
+        this.user = user;
+        this.book = book;
+        this.rating = rating;
+        this.review = review;
+        this.review_date = LocalDate.now();
+    }
 }

@@ -30,4 +30,10 @@ public class WishList {
 
     @Column(nullable = false)
     private Boolean notification = false;
+
+    public WishList(User user, Book book) {
+        this.user = user;
+        this.book = book;
+        this.notification = false;
+    }
 }

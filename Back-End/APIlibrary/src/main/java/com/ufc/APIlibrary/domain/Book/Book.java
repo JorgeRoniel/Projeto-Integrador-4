@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,4 +44,16 @@ public class Book {
     private Integer reviews_count = 0;
     private Float rating_avg = 0f;
     private LocalDate acquision_date;
+
+    public Book(String title, String author, String publisher, String edition, Integer date_publication, List<String> categories, String description, byte[] preview_picture) {
+        this.title = title;
+        this.author = author;
+        this.publisher = publisher;
+        this.edition = edition;
+        this.date_publication = date_publication;
+        this.categories = categories;
+        this.description = description;
+        this.preview_picture = preview_picture;
+        this.acquision_date = LocalDate.now();
+    }
 }
