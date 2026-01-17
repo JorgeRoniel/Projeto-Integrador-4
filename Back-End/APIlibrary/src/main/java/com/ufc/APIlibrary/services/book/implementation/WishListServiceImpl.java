@@ -4,6 +4,7 @@ import com.ufc.APIlibrary.domain.Book.Book;
 import com.ufc.APIlibrary.domain.Book.WishList;
 import com.ufc.APIlibrary.domain.Book.WishListId;
 import com.ufc.APIlibrary.domain.User.User;
+import com.ufc.APIlibrary.dto.book.DatasForWishListDTO;
 import com.ufc.APIlibrary.dto.book.WishListDTO;
 import com.ufc.APIlibrary.repositories.BookRepository;
 import com.ufc.APIlibrary.repositories.UserRepository;
@@ -23,13 +24,13 @@ public class WishListServiceImpl implements WishListService {
     private BookRepository bookRepository;
 
     @Override
-    public void addBookInWL(Integer user_id, Integer book_id) {
+    public void addBookInWL(DatasForWishListDTO data) {
 
-        if(repository.existsByUserIdAndBookId(user_id, book_id)){
+        if(repository.existsByUserIdAndBookId(data.user_id(), data.book_id())){
             throw new RuntimeException("The Book is already in wishlist.");
         }
-        User user = userRepository.findById(user_id).orElse(null);
-        Book book = bookRepository.findById(book_id).orElse(null);
+        User user = userRepository.findById(data.user_id()).orElse(null);
+        Book book = bookRepository.findById(data.book_id()).orElse(null);
         if(book != null && user != null){
             WishList wl = new WishList(user, book);
             repository.save(wl);
@@ -54,23 +55,23 @@ public class WishListServiceImpl implements WishListService {
     }
 
     @Override
-    public void updateNotification(Integer user_id, Integer book_id, Boolean notification) {
-        if(!repository.existsByUserIdAndBookId(user_id, book_id)){
+    public void updateNotification(DatasForWishListDTO data, Boolean notification) {
+        if(!repository.existsByUserIdAndBookId(data.user_id(), data.book_id())){
             throw new RuntimeException("WishList Not Created");
         }
 
-        WishList wl = repository.findByUserIdAndBookId(user_id, book_id);
+        WishList wl = repository.findByUserIdAndBookId(data.user_id(), data.book_id());
         wl.setNotification(notification);
         repository.save(wl);
     }
 
     @Override
-    public void removeFromWishList(Integer user_id, Integer book_id) {
-        if(!repository.existsByUserIdAndBookId(user_id, book_id)){
+    public void removeFromWishList(DatasForWishListDTO data) {
+        if(!repository.existsByUserIdAndBookId(data.user_id(), data.book_id())){
             throw new RuntimeException("WishList Not Created");
         }
 
-        WishList wl = repository.findByUserIdAndBookId(user_id, book_id);
+        WishList wl = repository.findByUserIdAndBookId(data.user_id(), data.book_id());
         repository.delete(wl);
     }
 }
