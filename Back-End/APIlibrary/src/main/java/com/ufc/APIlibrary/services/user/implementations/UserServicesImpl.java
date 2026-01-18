@@ -3,6 +3,7 @@ package com.ufc.APIlibrary.services.user.implementations;
 import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.dto.user.LoginUserDTO;
 import com.ufc.APIlibrary.dto.user.RegisterUserDTO;
+import com.ufc.APIlibrary.dto.user.ReturnLoginDTO;
 import com.ufc.APIlibrary.repositories.UserRepository;
 import com.ufc.APIlibrary.services.token.TokenService;
 import com.ufc.APIlibrary.services.user.UserServices;
@@ -27,14 +28,15 @@ public class UserServicesImpl implements UserServices {
 
 
     @Override
-    public String login(LoginUserDTO data) {
+    public ReturnLoginDTO login(LoginUserDTO data) {
         var emailpass = new UsernamePasswordAuthenticationToken(data.email(), data.senha());
         try {
             var auth = authenticationManager.authenticate(emailpass);
-            return tokenService.generateToken((User) auth.getPrincipal());
+            User user = (User) auth.getPrincipal();
+            String token = tokenService.generateToken((User) user);
+            return new ReturnLoginDTO(user.getId(), token);
         } catch (AuthenticationException e){
-            System.out.println(e.getMessage());
-            return "";
+            throw new RuntimeException("Error On Login!");
         }
     }
 
