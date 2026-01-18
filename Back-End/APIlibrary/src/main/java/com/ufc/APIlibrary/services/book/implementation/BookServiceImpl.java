@@ -50,7 +50,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public void registerBook(BookRegisterDTO data) {
+    public Book registerBook(BookRegisterDTO data) {
 
 
         Book book = new Book(
@@ -64,7 +64,7 @@ public class BookServiceImpl implements BookService {
                 data.imagem()
         );
 
-        repository.save(book);
+        return repository.save(book);
 
     }
 

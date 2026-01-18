@@ -1,5 +1,6 @@
 package com.ufc.APIlibrary.controllers;
 
+import com.ufc.APIlibrary.domain.Book.Book;
 import com.ufc.APIlibrary.dto.book.*;
 import com.ufc.APIlibrary.services.book.BookService;
 import com.ufc.APIlibrary.services.book.RatingBookService;
@@ -27,9 +28,9 @@ public class BookController {
     private WishListService wishListService;
 
     @PostMapping
-    public ResponseEntity regiterBookRoute(@RequestBody BookRegisterDTO data){
-        bookService.registerBook(data);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<ReturnCreationBookDTO> regiterBookRoute(@RequestBody BookRegisterDTO data){
+        Book book = bookService.registerBook(data);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ReturnCreationBookDTO(book.getId()));
     }
 
     @GetMapping
