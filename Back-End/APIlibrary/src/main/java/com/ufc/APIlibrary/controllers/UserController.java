@@ -39,12 +39,12 @@ public class UserController {
     }
 
     @GetMapping("/ratings/{id}")
-    public ResponseEntity<List<ReturnBookShortDTO>> listRatingsForUser(@PathVariable Integer user_id){
+    public ResponseEntity<List<ReturnBookShortDTO>> listRatingsForUser(@PathVariable("id") Integer user_id){
         return ResponseEntity.ok(ratingBookService.listRatedBooksByUser(user_id));
     }
 
     @GetMapping("/{id}/wishlist")
-    public ResponseEntity<List<WishListDTO>> listOfWishList(@PathVariable Integer user_id){
+    public ResponseEntity<List<WishListDTO>> listOfWishList(@PathVariable("id") Integer user_id){
         return ResponseEntity.ok(wishListService.listUsersWishes(user_id));
     }
 

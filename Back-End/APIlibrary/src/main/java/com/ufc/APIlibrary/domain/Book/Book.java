@@ -35,7 +35,7 @@ public class Book {
             joinColumns = @JoinColumn(name = "id")
     )
 
-    private List<String> categories = new ArrayList<>();
+    private List<String> category = new ArrayList<>();
 
 
     private String description;
@@ -51,7 +51,7 @@ public class Book {
         this.publisher = publisher;
         this.edition = edition;
         this.date_publication = date_publication;
-        this.categories = categories;
+        this.category = categories;
         this.description = description;
         this.preview_picture = preview_picture;
         this.acquision_date = LocalDate.now();

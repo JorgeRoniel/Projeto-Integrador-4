@@ -12,23 +12,24 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "books_rating")
+@Table(name = "book_ratings")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
+@Access(AccessType.FIELD)
 public class BookRating implements Serializable {
 
     @EmbeddedId
-    private BookRatingId id;
+    private BookRatingId id = new BookRatingId();
 
     @ManyToOne
-    @MapsId("UserId")
+    @MapsId("userId")
     @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
-    @MapsId("BookId")
+    @MapsId("bookId")
     @JoinColumn(name = "book_id")
     private Book book;
 
@@ -38,13 +39,13 @@ public class BookRating implements Serializable {
     @Column(length = 255)
     private String review;
 
-    private LocalDate review_date;
+    private LocalDate date_review;
 
     public BookRating(User user, Book book, Integer rating, String review) {
         this.user = user;
         this.book = book;
         this.rating = rating;
         this.review = review;
-        this.review_date = LocalDate.now();
+        this.date_review = LocalDate.now();
     }
 }

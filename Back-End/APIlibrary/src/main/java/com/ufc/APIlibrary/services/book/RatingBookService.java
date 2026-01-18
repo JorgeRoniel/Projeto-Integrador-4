@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface RatingBookService {
 
-    String rating(DoRatingBookDTO data);
+    String rating(DoRatingBookDTO data, Integer book_id);
     List<ReturnRatingBookDTO> listRatedForBooks(Integer book_id);
     List<ReturnBookShortDTO> listRatedBooksByUser(Integer user_id);
 

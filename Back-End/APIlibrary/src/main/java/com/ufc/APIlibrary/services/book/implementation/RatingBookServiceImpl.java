@@ -26,7 +26,7 @@ public class RatingBookServiceImpl implements RatingBookService {
     private BookRepository bookRepository;
 
     @Override
-    public String rating(DoRatingBookDTO data) {
+    public String rating(DoRatingBookDTO data, Integer book_id) {
 
         String message = "";
         if(data.nota() == null || data.nota() < 0 || data.nota() > 5){
@@ -34,7 +34,7 @@ public class RatingBookServiceImpl implements RatingBookService {
         }
 
         User user = userRepository.findById(data.user_id()).orElse(null);
-        Book book = bookRepository.findById(data.book_id()).orElse(null);
+        Book book = bookRepository.findById(book_id).orElse(null);
 
         if(user != null && book != null){
             BookRating rating = new BookRating(user, book, data.nota(), data.comentario());
@@ -54,7 +54,7 @@ public class RatingBookServiceImpl implements RatingBookService {
                 rating.getUser().getProfile(),
                 rating.getRating(),
                 rating.getReview(),
-                rating.getReview_date())).toList();
+                rating.getDate_review())).toList();
         return r;
     }
 
@@ -67,6 +67,6 @@ public class RatingBookServiceImpl implements RatingBookService {
                 r.getBook().getAuthor(),
                 r.getBook().getPreview_picture(),
                 r.getBook().getRating_avg(),
-                r.getBook().getCategories())).toList();
+                r.getBook().getCategory())).toList();
     }
 }

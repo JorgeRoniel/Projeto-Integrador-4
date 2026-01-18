@@ -31,7 +31,7 @@ public class BookServiceImpl implements BookService {
                 book.getAuthor(),
                 book.getPreview_picture(),
                 book.getRating_avg(),
-                book.getCategories()));
+                book.getCategory()));
 
         return returnFormated;
     }
@@ -43,7 +43,7 @@ public class BookServiceImpl implements BookService {
                 book.getId(),
                 book.getTitle(),
                 book.getAuthor(),
-                book.getCategories(),
+                book.getCategory(),
                 book.getDescription(),
                 Arrays.toString(book.getPreview_picture()),
                 book.getRating_avg());
@@ -52,7 +52,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public void registerBook(BookRegisterDTO data) {
 
-        byte[] image = data.imagem().getBytes(StandardCharsets.UTF_8);
+
         Book book = new Book(
                 data.titulo(),
                 data.autor(),
@@ -61,7 +61,7 @@ public class BookServiceImpl implements BookService {
                 data.ano_publicacao(),
                 data.categorias(),
                 data.descricao(),
-                image
+                data.imagem()
         );
 
         repository.save(book);

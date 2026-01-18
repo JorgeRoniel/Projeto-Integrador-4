@@ -49,8 +49,8 @@ public class BookController {
     }
 
     @PostMapping("/{id}/rating")
-    public ResponseEntity doRatingRoute(@PathVariable Integer book_id, @RequestBody DoRatingBookDTO data){
-        String message = ratingBookService.rating(data);
+    public ResponseEntity doRatingRoute(@PathVariable("id") Integer book_id, @RequestBody DoRatingBookDTO data){
+        String message = ratingBookService.rating(data, book_id);
 
         if(message.equals("OutInterval")){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A nota está fora do intervalo (0 - 5).");
@@ -62,7 +62,7 @@ public class BookController {
     }
 
     @GetMapping("/{id}/rating")
-    public ResponseEntity<List<ReturnRatingBookDTO>> listRatingsForBook(@PathVariable Integer book_id){
+    public ResponseEntity<List<ReturnRatingBookDTO>> listRatingsForBook(@PathVariable("id") Integer book_id){
         return ResponseEntity.ok(ratingBookService.listRatedForBooks(book_id));
     }
 

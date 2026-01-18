@@ -1,6 +1,8 @@
 package com.ufc.APIlibrary.domain.Book;
 
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
@@ -15,22 +17,24 @@ import java.util.Objects;
 @NoArgsConstructor
 @Getter
 @Setter
+@Access(AccessType.FIELD)
 public class BookRatingId {
 
     @Column(name = "user_id")
-    private Integer UserId;
+    private Integer userId;
     @Column(name = "book_id")
-    private Integer BookId;
+    private Integer bookId;
+
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         BookRatingId that = (BookRatingId) o;
-        return Objects.equals(UserId, that.UserId) && Objects.equals(BookId, that.BookId);
+        return Objects.equals(userId, that.userId) && Objects.equals(bookId, that.bookId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(UserId, BookId);
+        return Objects.hash(userId, bookId);
     }
 }

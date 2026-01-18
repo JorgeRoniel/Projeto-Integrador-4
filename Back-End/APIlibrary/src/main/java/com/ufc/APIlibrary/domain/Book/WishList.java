@@ -8,23 +8,24 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "usuario_deseja_livro")
+@Table(name = "wishlist")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
+@Access(AccessType.FIELD)
 public class WishList {
 
     @EmbeddedId
-    private WishListId id;
+    private WishListId id = new WishListId();
 
     @ManyToOne
-    @MapsId("UserId")
+    @MapsId("userId")
     @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
-    @MapsId("BookId")
+    @MapsId("bookId")
     @JoinColumn(name = "book_id")
     private Book book;
 

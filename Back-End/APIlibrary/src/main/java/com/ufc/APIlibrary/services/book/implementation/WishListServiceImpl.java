@@ -5,15 +5,18 @@ import com.ufc.APIlibrary.domain.Book.WishList;
 import com.ufc.APIlibrary.domain.Book.WishListId;
 import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.dto.book.DatasForWishListDTO;
+import com.ufc.APIlibrary.dto.book.NotificationDTO;
 import com.ufc.APIlibrary.dto.book.WishListDTO;
 import com.ufc.APIlibrary.repositories.BookRepository;
 import com.ufc.APIlibrary.repositories.UserRepository;
 import com.ufc.APIlibrary.repositories.WishListRepository;
 import com.ufc.APIlibrary.services.book.WishListService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class WishListServiceImpl implements WishListService {
 
     @Autowired
@@ -49,19 +52,19 @@ public class WishListServiceImpl implements WishListService {
                 w.getBook().getAuthor(),
                 w.getBook().getPreview_picture(),
                 w.getBook().getRating_avg(),
-                w.getBook().getCategories(),
+                w.getBook().getCategory(),
                 w.getNotification()
         )).toList();
     }
 
     @Override
-    public void updateNotification(DatasForWishListDTO data, Boolean notification) {
+    public void updateNotification(NotificationDTO data) {
         if(!repository.existsByUserIdAndBookId(data.user_id(), data.book_id())){
             throw new RuntimeException("WishList Not Created");
         }
 
         WishList wl = repository.findByUserIdAndBookId(data.user_id(), data.book_id());
-        wl.setNotification(notification);
+        wl.setNotification(data.notification());
         repository.save(wl);
     }
 

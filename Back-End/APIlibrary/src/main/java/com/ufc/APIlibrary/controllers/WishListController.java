@@ -2,6 +2,7 @@ package com.ufc.APIlibrary.controllers;
 
 
 import com.ufc.APIlibrary.dto.book.DatasForWishListDTO;
+import com.ufc.APIlibrary.dto.book.NotificationDTO;
 import com.ufc.APIlibrary.services.book.WishListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +22,8 @@ public class WishListController {
     }
 
     @PutMapping("/notification")
-    public ResponseEntity updateNotificationRoute(@RequestBody DatasForWishListDTO data, @RequestBody boolean notification){
-        service.updateNotification(data, notification);
+    public ResponseEntity updateNotificationRoute(@RequestBody NotificationDTO data){
+        service.updateNotification(data);
         return ResponseEntity.ok().build();
     }
 
