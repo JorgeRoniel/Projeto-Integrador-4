@@ -4,6 +4,7 @@ import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.dto.user.LoginUserDTO;
 import com.ufc.APIlibrary.dto.user.RegisterUserDTO;
 import com.ufc.APIlibrary.dto.user.ReturnLoginDTO;
+import com.ufc.APIlibrary.dto.user.UpdateUserDTO;
 import com.ufc.APIlibrary.repositories.UserRepository;
 import com.ufc.APIlibrary.services.token.TokenService;
 import com.ufc.APIlibrary.services.user.UserServices;
@@ -45,5 +46,34 @@ public class UserServicesImpl implements UserServices {
         String pass = encoder.encode(data.senha());
         User u = new User(data.nome(), data.username(), data.email(), pass, data.telefone(), data.role());
         return repository.save(u);
+    }
+
+    @Override
+    public void updateUser(Integer user_id, UpdateUserDTO data) {
+        var u = repository.findById(user_id).orElse(null);
+
+        if(u != null){
+            String new_pass = encoder.encode(data.senha());
+
+            u.setUsername(data.username());
+            u.setName(data.nome());
+            u.setEmail(data.email());
+            u.setPassword(new_pass);
+            u.setProfile(data.foto());
+            u.setPhone_number(data.telefone());
+
+            repository.save(u);
+        }else{
+            throw new RuntimeException("404 - User Not Found");
+        }
+    }
+
+    @Override
+    public void deleteUser(Integer user_id) {
+        if(repository.existsById(user_id)){
+            repository.deleteById(user_id);
+        }else{
+            throw new RuntimeException("404 - User Not Found");
+        }
     }
 }
