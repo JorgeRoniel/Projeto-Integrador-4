@@ -6,6 +6,7 @@ import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.dto.book.DoRatingBookDTO;
 import com.ufc.APIlibrary.dto.book.ReturnBookShortDTO;
 import com.ufc.APIlibrary.dto.book.ReturnRatingBookDTO;
+import com.ufc.APIlibrary.infra.exceptions.user.RatingNotFoundException;
 import com.ufc.APIlibrary.repositories.BookRatingRepository;
 import com.ufc.APIlibrary.repositories.BookRepository;
 import com.ufc.APIlibrary.repositories.UserRepository;
@@ -61,12 +62,16 @@ public class RatingBookServiceImpl implements RatingBookService {
     @Override
     public List<ReturnBookShortDTO> listRatedBooksByUser(Integer user_id) {
         List<BookRating> ratings = repository.findByUserId(user_id);
-        return ratings.stream().map(r -> new ReturnBookShortDTO(
-                r.getBook().getId(),
-                r.getBook().getTitle(),
-                r.getBook().getAuthor(),
-                r.getBook().getPreview_picture(),
-                r.getBook().getRating_avg(),
-                r.getBook().getCategory())).toList();
+        if (!ratings.isEmpty()){
+            return ratings.stream().map(r -> new ReturnBookShortDTO(
+                    r.getBook().getId(),
+                    r.getBook().getTitle(),
+                    r.getBook().getAuthor(),
+                    r.getBook().getPreview_picture(),
+                    r.getBook().getRating_avg(),
+                    r.getBook().getCategory())).toList();
+        }else {
+            throw new RatingNotFoundException();
+        }
     }
 }

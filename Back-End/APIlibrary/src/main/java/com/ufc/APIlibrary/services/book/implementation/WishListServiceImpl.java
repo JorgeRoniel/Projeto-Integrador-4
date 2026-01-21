@@ -7,6 +7,7 @@ import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.dto.book.DatasForWishListDTO;
 import com.ufc.APIlibrary.dto.book.NotificationDTO;
 import com.ufc.APIlibrary.dto.book.WishListDTO;
+import com.ufc.APIlibrary.infra.exceptions.user.WishListNotFoundException;
 import com.ufc.APIlibrary.repositories.BookRepository;
 import com.ufc.APIlibrary.repositories.UserRepository;
 import com.ufc.APIlibrary.repositories.WishListRepository;
@@ -46,15 +47,19 @@ public class WishListServiceImpl implements WishListService {
     @Override
     public List<WishListDTO> listUsersWishes(Integer user_id) {
         List<WishList> wl = repository.findByUserId(user_id);
-        return wl.stream().map(w -> new WishListDTO(
-                w.getBook().getId(),
-                w.getBook().getTitle(),
-                w.getBook().getAuthor(),
-                w.getBook().getPreview_picture(),
-                w.getBook().getRating_avg(),
-                w.getBook().getCategory(),
-                w.getNotification()
-        )).toList();
+        if (!wl.isEmpty()){
+            return wl.stream().map(w -> new WishListDTO(
+                    w.getBook().getId(),
+                    w.getBook().getTitle(),
+                    w.getBook().getAuthor(),
+                    w.getBook().getPreview_picture(),
+                    w.getBook().getRating_avg(),
+                    w.getBook().getCategory(),
+                    w.getNotification()
+            )).toList();
+        }else{
+            throw new WishListNotFoundException();
+        }
     }
 
     @Override
