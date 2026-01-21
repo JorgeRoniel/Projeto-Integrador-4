@@ -36,7 +36,7 @@ public class UserServicesImpl implements UserServices {
         var auth = authenticationManager.authenticate(emailpass);
         User user = (User) auth.getPrincipal();
         String token = tokenService.generateToken((User) user);
-        return new ReturnLoginDTO(token, user.getId(), user.getUsername(), user.getName(), user.getEmail(), user.getProfile(), user.getPhone_number());
+        return new ReturnLoginDTO(token, user.getId(), user.getUsername(), user.getName(), user.getEmail(), user.getProfile(), user.getPhone_number(), user.getRole().toString());
 
     }
 
