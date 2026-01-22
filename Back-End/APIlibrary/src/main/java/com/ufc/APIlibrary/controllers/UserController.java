@@ -6,6 +6,7 @@ import com.ufc.APIlibrary.dto.book.WishListDTO;
 import com.ufc.APIlibrary.dto.user.LoginUserDTO;
 import com.ufc.APIlibrary.dto.user.RegisterUserDTO;
 import com.ufc.APIlibrary.dto.user.ReturnLoginDTO;
+import com.ufc.APIlibrary.dto.user.UpdateUserDTO;
 import com.ufc.APIlibrary.services.book.RatingBookService;
 import com.ufc.APIlibrary.services.book.WishListService;
 import com.ufc.APIlibrary.services.user.UserServices;
@@ -36,6 +37,18 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<ReturnLoginDTO> login(@RequestBody LoginUserDTO data){
         return ResponseEntity.status(HttpStatus.OK).body(services.login(data));
+    }
+
+    @PutMapping("/{id}/update")
+    public ResponseEntity updateUserRoute(@PathVariable("id") Integer user_id, @RequestBody UpdateUserDTO data){
+        services.updateUser(user_id, data);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity deleteUserRoute(@PathVariable("id") Integer user_id){
+        services.deleteUser(user_id);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @GetMapping("/ratings/{id}")
