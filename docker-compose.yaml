@@ -8,7 +8,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=Password123#@!
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     networks:
       - app-network
 
@@ -21,7 +21,7 @@ services:
       - postgres
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ProjIntegrador4
-      - SPRING_DATASOURCE_USER=postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=Password123#@!
     ports:
       - "8080:8080"
