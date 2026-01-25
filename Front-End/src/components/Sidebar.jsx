@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Compass,
@@ -7,12 +7,16 @@ import {
   Heart,
   User,
   LogOut,
+  Shield,
 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const Sidebar = ({ logoClara }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout, isAdmin } = useAuth();
 
-  //Aqui é onde temos a sidebar com os icones após o login/criação de conta(os icones são da biblioteca lucide react)
+  // Itens do menu principal
   const menuItems = [
     {
       id: "dashboard",
@@ -34,6 +38,12 @@ const Sidebar = ({ logoClara }) => {
       path: "/lista-desejo",
     },
   ];
+
+  // Função de logout
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <div className="w-64 bg-[#001b4e] h-screen sticky top-0 flex flex-col p-6 text-white shrink-0">
@@ -62,20 +72,47 @@ const Sidebar = ({ logoClara }) => {
       </nav>
 
       <div className="mt-auto border-t border-white/20 pt-6 space-y-4">
+        {/* Opção de Admin - só aparece se o usuário for ADMIN */}
+        {isAdmin() && (
+          <Link
+            to="/admin"
+            className={`flex items-center gap-3 w-full p-2 rounded-lg transition-all ${
+              location.pathname === "/admin"
+                ? "bg-yellow-500 text-[#001b4e] font-bold"
+                : "text-yellow-400 hover:bg-white/10"
+            }`}
+          >
+            <Shield size={18} /> Administração
+          </Link>
+        )}
+
         <Link
           to="/perfil"
-          className="flex items-center gap-3 w-full p-2 hover:text-gray-300 transition-colors text-sm"
+          className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors text-sm ${
+            location.pathname === "/perfil"
+              ? "bg-white text-[#001b4e] font-bold"
+              : "hover:text-gray-300"
+          }`}
         >
           <User size={18} /> Perfil
         </Link>
-        <Link
-          to="/login"
+
+        {/* Mostra o nome do usuário se estiver logado */}
+        {user && (
+          <p className="text-xs text-gray-400 px-2 truncate">
+            Logado como: {user.nome || user.username}
+          </p>
+        )}
+
+        <button
+          onClick={handleLogout}
           className="flex items-center gap-3 w-full p-2 text-red-400 hover:text-red-300 transition-colors text-sm"
         >
           <LogOut size={18} /> Sair
-        </Link>
+        </button>
       </div>
     </div>
   );
 };
+
 export default Sidebar;
