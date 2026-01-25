@@ -4,6 +4,7 @@ import com.ufc.APIlibrary.domain.Book.Book;
 import com.ufc.APIlibrary.dto.book.BookRegisterDTO;
 import com.ufc.APIlibrary.dto.book.ReturnBookLongDTO;
 import com.ufc.APIlibrary.dto.book.ReturnBookShortDTO;
+import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
 import com.ufc.APIlibrary.repositories.BookRepository;
 import com.ufc.APIlibrary.services.book.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,9 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public ReturnBookLongDTO findBook(Integer id) {
-        var book = repository.findById(id).orElseThrow();
+        Book book = repository.findById(id)
+                .orElseThrow(BookNotFoundException::new);
+
         return new ReturnBookLongDTO(
                 book.getId(),
                 book.getTitle(),
@@ -70,9 +73,9 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public void deleteBook(Integer id) {
-        if(repository.existsById(id)){
-            repository.deleteById(id);
+        if (!repository.existsById(id)) {
+            throw new BookNotFoundException();
         }
-        //Adicionar uma futura excessão aqui
+        repository.deleteById(id);
     }
 }

@@ -6,7 +6,10 @@ import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.dto.book.DoRatingBookDTO;
 import com.ufc.APIlibrary.dto.book.ReturnBookShortDTO;
 import com.ufc.APIlibrary.dto.book.ReturnRatingBookDTO;
+import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
+import com.ufc.APIlibrary.infra.exceptions.book.InvalidRatingException;
 import com.ufc.APIlibrary.infra.exceptions.user.RatingNotFoundException;
+import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
 import com.ufc.APIlibrary.repositories.BookRatingRepository;
 import com.ufc.APIlibrary.repositories.BookRepository;
 import com.ufc.APIlibrary.repositories.UserRepository;
@@ -29,22 +32,20 @@ public class RatingBookServiceImpl implements RatingBookService {
     @Override
     public String rating(DoRatingBookDTO data, Integer book_id) {
 
-        String message = "";
-        if(data.nota() == null || data.nota() < 0 || data.nota() > 5){
-            message = "OutInterval";
+        if (data.nota() == null || data.nota() < 0 || data.nota() > 5) {
+            throw new InvalidRatingException();
         }
 
-        User user = userRepository.findById(data.user_id()).orElse(null);
-        Book book = bookRepository.findById(book_id).orElse(null);
+        User user = userRepository.findById(data.user_id())
+                .orElseThrow(UserNotFoundException::new);
 
-        if(user != null && book != null){
-            BookRating rating = new BookRating(user, book, data.nota(), data.comentario());
-            repository.save(rating);
-            message = "OK";
-        }else{
-            message = "User/Book_null";
-        }
-        return message;
+        Book book = bookRepository.findById(book_id)
+                .orElseThrow(BookNotFoundException::new);
+
+        BookRating rating = new BookRating(user, book, data.nota(), data.comentario());
+        repository.save(rating);
+        
+        return "OK";
     }
 
     @Override
