@@ -54,12 +54,18 @@ public class BookController {
 
         ratingBookService.rating(data, book_id);
         return ResponseEntity.ok().build();
-        
+
     }
 
     @GetMapping("/{id}/rating")
     public ResponseEntity<List<ReturnRatingBookDTO>> listRatingsForBook(@PathVariable("id") Integer book_id){
         return ResponseEntity.ok(ratingBookService.listRatedForBooks(book_id));
+    }
+
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity deleteBook(@PathVariable ("id") Integer book_id) {
+        bookService.deleteBook(book_id);
+        return ResponseEntity.ok().build();
     }
 
 
