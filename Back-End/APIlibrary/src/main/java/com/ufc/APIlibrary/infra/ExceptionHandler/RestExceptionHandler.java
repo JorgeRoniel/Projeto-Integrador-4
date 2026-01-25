@@ -1,5 +1,8 @@
 package com.ufc.APIlibrary.infra.ExceptionHandler;
 
+import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
+import com.ufc.APIlibrary.infra.exceptions.book.InvalidRatingException;
+import com.ufc.APIlibrary.infra.exceptions.book.WishListAlreadyExistsException;
 import com.ufc.APIlibrary.infra.exceptions.user.RatingNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.RegisterErrorException;
 import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
@@ -47,5 +50,27 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     //TRATAMENTO DE EXCESSÕES ACERCA DAS FUNÇÕES DO CONTROLLER 'BOOKCONTROLLER'
 
+    @ExceptionHandler(BookNotFoundException.class)
+    private ResponseEntity<FormaterRestException> bookNotFound(BookNotFoundException ex){
+        FormaterRestException response =
+                new FormaterRestException(HttpStatus.NOT_FOUND, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(InvalidRatingException.class)
+    private ResponseEntity<FormaterRestException> invalidRating(InvalidRatingException ex){
+        FormaterRestException response =
+                new FormaterRestException(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     //TRATAMENTO DE EXCESSÕES ACERCA DAS FUNÇÕES DO CONTROLLER 'WISHLISTCONTROLLER'
+
+        @ExceptionHandler(WishListAlreadyExistsException.class)
+    private ResponseEntity<FormaterRestException> wishlistAlreadyExists(WishListAlreadyExistsException ex){
+        FormaterRestException response =
+                new FormaterRestException(HttpStatus.CONFLICT, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
 }

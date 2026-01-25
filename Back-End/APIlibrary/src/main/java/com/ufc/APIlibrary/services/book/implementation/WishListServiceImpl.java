@@ -7,6 +7,9 @@ import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.dto.book.DatasForWishListDTO;
 import com.ufc.APIlibrary.dto.book.NotificationDTO;
 import com.ufc.APIlibrary.dto.book.WishListDTO;
+import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
+import com.ufc.APIlibrary.infra.exceptions.book.WishListAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.WishListNotFoundException;
 import com.ufc.APIlibrary.repositories.BookRepository;
 import com.ufc.APIlibrary.repositories.UserRepository;
@@ -31,16 +34,16 @@ public class WishListServiceImpl implements WishListService {
     public void addBookInWL(DatasForWishListDTO data) {
 
         if(repository.existsByUserIdAndBookId(data.user_id(), data.book_id())){
-            throw new RuntimeException("The Book is already in wishlist.");
+            throw new WishListAlreadyExistsException();
         }
-        User user = userRepository.findById(data.user_id()).orElse(null);
-        Book book = bookRepository.findById(data.book_id()).orElse(null);
-        if(book != null && user != null){
-            WishList wl = new WishList(user, book);
-            repository.save(wl);
-        }else{
-            throw new RuntimeException("Error while add book in wishlist.");
-        }
+
+        User user = userRepository.findById(data.user_id())
+                .orElseThrow(UserNotFoundException::new);
+
+        Book book = bookRepository.findById(data.book_id())
+                .orElseThrow(BookNotFoundException::new);
+
+        repository.save(new WishList(user, book));
 
     }
 
@@ -64,22 +67,24 @@ public class WishListServiceImpl implements WishListService {
 
     @Override
     public void updateNotification(NotificationDTO data) {
-        if(!repository.existsByUserIdAndBookId(data.user_id(), data.book_id())){
-            throw new RuntimeException("WishList Not Created");
+        WishList wl = repository.findByUserIdAndBookId(data.user_id(), data.book_id());
+
+        if (wl == null) {
+            throw new WishListNotFoundException();
         }
 
-        WishList wl = repository.findByUserIdAndBookId(data.user_id(), data.book_id());
         wl.setNotification(data.notification());
         repository.save(wl);
     }
 
     @Override
     public void removeFromWishList(DatasForWishListDTO data) {
-        if(!repository.existsByUserIdAndBookId(data.user_id(), data.book_id())){
-            throw new RuntimeException("WishList Not Created");
+        WishList wl = repository.findByUserIdAndBookId(data.user_id(), data.book_id());
+
+        if (wl == null) {
+            throw new WishListNotFoundException();
         }
 
-        WishList wl = repository.findByUserIdAndBookId(data.user_id(), data.book_id());
         repository.delete(wl);
     }
 }
