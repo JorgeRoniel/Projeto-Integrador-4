@@ -29,9 +29,23 @@ services:
       - app-network
     restart: on-failure
 
+  frontend:
+    build:
+      context: ./Front-End
+      dockerfile: Dockerfile
+    container_name: Front-End-PI4
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - app-network
+    restart: on-failure
+
 volumes:
   postgres_data:
 
 networks:
   app-network:
     driver: bridge
+

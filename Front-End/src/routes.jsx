@@ -12,8 +12,13 @@ import Perfil from "./pages/Perfil";
 function AppRoutes({
   wishlist,
   setWishlist,
-  adicionarALista,
-  removerDaLista,
+  adicionarAListaDesejo,
+  removerDaListaDesejo,
+  meusLivros,
+  setMeusLivros,
+  adicionarAMeusLivros,
+  moverParaMeusLivros,
+  atualizarAvaliacaoLivro,
   logoEscura,
   logoClara,
   livros,
@@ -36,14 +41,35 @@ function AppRoutes({
 
       <Route
         path="/catalogo"
-        element={<Catalogo livros={livros} onAdd={adicionarALista} />}
+        element={
+          <Catalogo
+            livros={livros}
+            onAddWishlist={adicionarAListaDesejo}
+            onAddMeusLivros={adicionarAMeusLivros}
+          />
+        }
       />
       <Route
         path="/lista-desejo"
-        element={<ListaDesejo wishlist={wishlist} onRemove={removerDaLista} />}
+        element={
+          <ListaDesejo
+            wishlist={wishlist}
+            onRemove={removerDaListaDesejo}
+            onMoverParaMeusLivros={moverParaMeusLivros}
+          />
+        }
       />
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/meus-livros" element={<MeusLivros />} />
+      <Route
+        path="/meus-livros"
+        element={
+          <MeusLivros
+            meusLivros={meusLivros}
+            setMeusLivros={setMeusLivros}
+            atualizarAvaliacaoLivro={atualizarAvaliacaoLivro}
+          />
+        }
+      />
       <Route path="/perfil" element={<Perfil />} />
 
       <Route path="/" element={<Navigate to="/login" replace />} />

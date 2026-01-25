@@ -48,14 +48,24 @@ const LIVROS_DISPONIVEIS = [
 function App() {
   const location = useLocation();
 
-  //Armazenamos os livros adicionados na lista de desejo
+  // Armazenamos os livros adicionados na lista de desejo
   const [wishlist, setWishlist] = useState([]);
 
-  //Função para adicionar um livro à lista (evitando duplicatas)
-  const adicionarALista = (livro) => {
+  // Armazenamos os livros em "Meus Livros"
+  const [meusLivros, setMeusLivros] = useState([]);
+
+  // Função para adicionar um livro à lista de desejos (evitando duplicatas)
+  const adicionarAListaDesejo = (livro) => {
+    if (meusLivros.find((item) => item.id === livro.id)) {
+      toast.error("Este livro já está em Meus Livros!", {
+        duration: 3000,
+        position: "bottom-right",
+      });
+      return;
+    }
     if (!wishlist.find((item) => item.id === livro.id)) {
       setWishlist([...wishlist, livro]);
-      toast.success(`"${livro.titulo}" adicionado à lista!`, {
+      toast.success(`"${livro.titulo}" adicionado à lista de desejos!`, {
         duration: 3000,
         position: "bottom-right",
       });
@@ -67,9 +77,53 @@ function App() {
     }
   };
 
-  //Função para remover um livro da lista de desejo
-  const removerDaLista = (id) => {
+  // Função para remover um livro da lista de desejo
+  const removerDaListaDesejo = (id) => {
     setWishlist(wishlist.filter((livro) => livro.id !== id));
+  };
+
+  // Função para adicionar um livro a "Meus Livros" (evitando duplicatas)
+  const adicionarAMeusLivros = (livro) => {
+    if (!meusLivros.find((item) => item.id === livro.id)) {
+      const livroComAvaliacao = { ...livro, avaliacao: null };
+      setMeusLivros([...meusLivros, livroComAvaliacao]);
+      toast.success(`"${livro.titulo}" adicionado a Meus Livros!`, {
+        duration: 3000,
+        position: "bottom-right",
+      });
+    } else {
+      toast.error("Este livro já está em Meus Livros!", {
+        duration: 3000,
+        position: "bottom-right",
+      });
+    }
+  };
+
+  // Função para mover livro da lista de desejos para "Meus Livros"
+  const moverParaMeusLivros = (livro) => {
+    if (!meusLivros.find((item) => item.id === livro.id)) {
+      const livroComAvaliacao = { ...livro, avaliacao: null };
+      setMeusLivros([...meusLivros, livroComAvaliacao]);
+      setWishlist(wishlist.filter((item) => item.id !== livro.id));
+      toast.success(`"${livro.titulo}" movido para Meus Livros!`, {
+        duration: 3000,
+        position: "bottom-right",
+      });
+    } else {
+      toast.error("Este livro já está em Meus Livros!", {
+        duration: 3000,
+        position: "bottom-right",
+      });
+    }
+  };
+
+  // Função para atualizar avaliação de um livro em "Meus Livros"
+  const atualizarAvaliacaoLivro = (livroId, avaliacao) => {
+    setMeusLivros((prevLivros) =>
+      prevLivros.map((livro) =>
+        livro.id === livroId ? { ...livro, avaliacao } : livro,
+      ),
+    );
   };
 
   const isAppView = [
@@ -84,13 +138,13 @@ function App() {
     <div className="min-h-screen w-full bg-white font-sans flex overflow-hidden">
       <Toaster />
 
-      {/*Tela que você vai após o login */}
+      {/* Tela que você vai após o login */}
       {isAppView && (
         <div className="flex w-full h-screen overflow-hidden animate-in fade-in">
           <Sidebar logoClara={logoClara} />
 
           <main className="flex-1 h-screen overflow-y-auto p-10 bg-white">
-            {/*A barra de busca no topo da página*/}
+            {/* A barra de busca no topo da página */}
             <div className="max-w-5xl mx-auto relative mb-12">
               <Search
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
@@ -106,8 +160,13 @@ function App() {
             <AppRoutes
               wishlist={wishlist}
               setWishlist={setWishlist}
-              adicionarALista={adicionarALista}
-              removerDaLista={removerDaLista}
+              adicionarAListaDesejo={adicionarAListaDesejo}
+              removerDaListaDesejo={removerDaListaDesejo}
+              meusLivros={meusLivros}
+              setMeusLivros={setMeusLivros}
+              adicionarAMeusLivros={adicionarAMeusLivros}
+              moverParaMeusLivros={moverParaMeusLivros}
+              atualizarAvaliacaoLivro={atualizarAvaliacaoLivro}
               logoEscura={logoEscura}
               logoClara={logoClara}
               livros={LIVROS_DISPONIVEIS}
@@ -120,8 +179,13 @@ function App() {
         <AppRoutes
           wishlist={wishlist}
           setWishlist={setWishlist}
-          adicionarALista={adicionarALista}
-          removerDaLista={removerDaLista}
+          adicionarAListaDesejo={adicionarAListaDesejo}
+          removerDaListaDesejo={removerDaListaDesejo}
+          meusLivros={meusLivros}
+          setMeusLivros={setMeusLivros}
+          adicionarAMeusLivros={adicionarAMeusLivros}
+          moverParaMeusLivros={moverParaMeusLivros}
+          atualizarAvaliacaoLivro={atualizarAvaliacaoLivro}
           logoEscura={logoEscura}
           logoClara={logoClara}
           livros={LIVROS_DISPONIVEIS}
