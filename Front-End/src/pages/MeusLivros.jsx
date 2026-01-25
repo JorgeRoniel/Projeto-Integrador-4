@@ -1,31 +1,66 @@
 import React, { useState } from "react";
 import BookCard from "../components/BookCard";
 import ModalAvaliacao from "../components/ModalAvaliacao";
+import ModalVisualizarAvaliacao from "../components/ModalVisualizarAvaliacao";
 import toast from "react-hot-toast";
 
 function MeusLivros({ meusLivros, setMeusLivros, atualizarAvaliacaoLivro }) {
-  // Estado para controlar o modal
-  const [modalAberto, setModalAberto] = useState(false);
+  // Estado para controlar os modais
+  const [modalAvaliacaoAberto, setModalAvaliacaoAberto] = useState(false);
+  const [modalVisualizarAberto, setModalVisualizarAberto] = useState(false);
   const [livroSelecionado, setLivroSelecionado] = useState(null);
+  const [modoEdicao, setModoEdicao] = useState(false);
 
-  // Abrir modal para avaliar livro
-  const abrirModal = (livro) => {
+  // Abrir modal correto baseado se livro já tem avaliação
+  const handleClickLivro = (livro) => {
     setLivroSelecionado(livro);
-    setModalAberto(true);
+    if (livro.avaliacao) {
+      // Livro já tem avaliação - abrir modal de visualização
+      setModalVisualizarAberto(true);
+    } else {
+      // Livro não tem avaliação - abrir modal para criar
+      setModoEdicao(false);
+      setModalAvaliacaoAberto(true);
+    }
   };
 
-  // Fechar modal
-  const fecharModal = () => {
-    setModalAberto(false);
+  // Fechar modal de avaliação
+  const fecharModalAvaliacao = () => {
+    setModalAvaliacaoAberto(false);
+    setLivroSelecionado(null);
+    setModoEdicao(false);
+  };
+
+  // Fechar modal de visualização
+  const fecharModalVisualizar = () => {
+    setModalVisualizarAberto(false);
     setLivroSelecionado(null);
   };
 
-  // Submeter avaliação
-  const handleSubmitAvaliacao = (dados) => {
-    // Atualiza a avaliação do livro
-    atualizarAvaliacaoLivro(dados.livroId, dados.rating);
+  // Abrir modal de edição (a partir do modal de visualização)
+  const handleEditarAvaliacao = (livro) => {
+    setModalVisualizarAberto(false);
+    setModoEdicao(true);
+    setLivroSelecionado(livro);
+    setModalAvaliacaoAberto(true);
+  };
 
-    toast.success("Avaliação adicionada com sucesso!", {
+  // Submeter avaliação (criar ou editar)
+  const handleSubmitAvaliacao = (dados) => {
+    // Atualiza a avaliação e comentário do livro
+    setMeusLivros((prevLivros) =>
+      prevLivros.map((livro) =>
+        livro.id === dados.livroId
+          ? { ...livro, avaliacao: dados.rating, comentario: dados.comentario }
+          : livro,
+      ),
+    );
+
+    const mensagem = modoEdicao
+      ? "Avaliação atualizada com sucesso!"
+      : "Avaliação adicionada com sucesso!";
+
+    toast.success(mensagem, {
       duration: 3000,
       position: "bottom-right",
     });
@@ -51,7 +86,7 @@ function MeusLivros({ meusLivros, setMeusLivros, atualizarAvaliacaoLivro }) {
           {meusLivros.map((livro) => (
             <div
               key={livro.id}
-              onClick={() => abrirModal(livro)}
+              onClick={() => handleClickLivro(livro)}
               className="cursor-pointer transition-transform hover:scale-105"
             >
               <BookCard livro={livro} showRating={true} />
@@ -60,12 +95,21 @@ function MeusLivros({ meusLivros, setMeusLivros, atualizarAvaliacaoLivro }) {
         </div>
       )}
 
-      {/* Modal de Avaliação */}
+      {/* Modal de Criar/Editar Avaliação */}
       <ModalAvaliacao
-        isOpen={modalAberto}
-        onClose={fecharModal}
+        isOpen={modalAvaliacaoAberto}
+        onClose={fecharModalAvaliacao}
         livro={livroSelecionado}
         onSubmit={handleSubmitAvaliacao}
+        modoEdicao={modoEdicao}
+      />
+
+      {/* Modal de Visualizar Avaliação */}
+      <ModalVisualizarAvaliacao
+        isOpen={modalVisualizarAberto}
+        onClose={fecharModalVisualizar}
+        livro={livroSelecionado}
+        onEdit={handleEditarAvaliacao}
       />
     </div>
   );

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { X } from "lucide-react";
 
 // Componente de Estrelas Interativas
 const StarRatingInput = ({ rating, setRating }) => {
@@ -18,9 +18,7 @@ const StarRatingInput = ({ rating, setRating }) => {
         >
           <svg
             className={`w-10 h-10 cursor-pointer transition-colors ${
-              star <= (hover || rating)
-                ? 'text-yellow-400'
-                : 'text-gray-300'
+              star <= (hover || rating) ? "text-yellow-400" : "text-gray-300"
             }`}
             fill="currentColor"
             viewBox="0 0 20 20"
@@ -33,31 +31,50 @@ const StarRatingInput = ({ rating, setRating }) => {
   );
 };
 
-function ModalAvaliacao({ isOpen, onClose, livro, onSubmit }) {
+function ModalAvaliacao({
+  isOpen,
+  onClose,
+  livro,
+  onSubmit,
+  modoEdicao = false,
+}) {
   const [rating, setRating] = useState(0);
-  const [comentario, setComentario] = useState('');
+  const [comentario, setComentario] = useState("");
+
+  // Preencher campos quando abrir em modo de edição
+  useEffect(() => {
+    if (isOpen && livro) {
+      if (modoEdicao && livro.avaliacao) {
+        setRating(livro.avaliacao);
+        setComentario(livro.comentario || "");
+      } else {
+        setRating(0);
+        setComentario("");
+      }
+    }
+  }, [isOpen, livro, modoEdicao]);
 
   const handleSubmit = () => {
     if (rating === 0) {
-      alert('Por favor, selecione uma nota!');
+      alert("Por favor, selecione uma nota!");
       return;
     }
 
     onSubmit({
       livroId: livro.id,
       rating,
-      comentario
+      comentario,
     });
 
     // Resetar campos
     setRating(0);
-    setComentario('');
+    setComentario("");
     onClose();
   };
 
   const handleClose = () => {
     setRating(0);
-    setComentario('');
+    setComentario("");
     onClose();
   };
 
@@ -82,7 +99,9 @@ function ModalAvaliacao({ isOpen, onClose, livro, onSubmit }) {
         </button>
 
         {/* Título do livro */}
-        <h2 className="text-2xl font-bold text-[#001b4e] mb-6">{livro.titulo}</h2>
+        <h2 className="text-2xl font-bold text-[#001b4e] mb-6">
+          {livro.titulo}
+        </h2>
 
         <div className="flex flex-col md:flex-row gap-8">
           {/* Capa do livro */}
@@ -124,7 +143,7 @@ function ModalAvaliacao({ isOpen, onClose, livro, onSubmit }) {
               onClick={handleSubmit}
               className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-full transition-colors uppercase tracking-wider"
             >
-              Adicionar Avaliação
+              {modoEdicao ? "Salvar Alterações" : "Adicionar Avaliação"}
             </button>
           </div>
         </div>
