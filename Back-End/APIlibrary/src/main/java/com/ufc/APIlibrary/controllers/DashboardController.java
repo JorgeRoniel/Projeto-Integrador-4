@@ -13,9 +13,11 @@ public class DashboardController {
     @Autowired
     private DashboardService service;
 
-    @GetMapping
-    public ResponseEntity<DashboardResponseDTO> getDashboard() {
-        DashboardResponseDTO dashboard = service.getDashboard();
+    @GetMapping("/user/{id}")
+    public ResponseEntity<DashboardResponseDTO> getDashboard(
+        @PathVariable Integer id
+    ) {
+        DashboardResponseDTO dashboard = service.getDashboard(id);
         return ResponseEntity.ok(dashboard);
     }
 }
