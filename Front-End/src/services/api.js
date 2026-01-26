@@ -213,6 +213,47 @@ export async function removeFromWishlist(userId, bookId) {
 }
 
 /**
+ * Busca estatísticas para o dashboard (Placeholder - backend em desenvolvimento)
+ * @param {number} userId - ID do usuário
+ * @returns {Promise<Object>}
+ */
+export async function getDashboardData(userId) {
+  // Simula uma chamada que falharia se tentarmos agora (404)
+  // Mas vamos retornar um mock estruturado para o Front já ficar pronto
+  try {
+    const data = await fetchAPI(`/api/dashboard/${userId}`);
+    return data;
+  } catch (error) {
+    console.log("Serviço de Dashboard ainda não disponível no backend. Usando mocks.");
+    return {
+      estatisticasAno: { livrosLidos: 12, meta: 20 },
+      interessesPendentes: { livrosNaoLidos: 5, tipo: 'Lista de Desejos' },
+      nivelSatisfacao: 90,
+      comparativoMensal: [
+        { label: 'Dezembro', value: 4 },
+        { label: 'Janeiro', value: 8 }
+      ],
+      topAutores: [
+        { name: 'Frank Miller', rating: 5.0 },
+        { name: 'J.R.R. Tolkien', rating: 4.8 }
+      ],
+      generosMaisLidos: [
+        { label: 'Quadrinhos', value: 4.5 },
+        { label: 'Fantasia', value: 4.0 }
+      ],
+      generosBemAvaliados: [
+        { label: 'Ação', value: 5.0 },
+        { label: 'Drama', value: 4.2 }
+      ],
+      paisesDestaque: [
+        { name: 'EUA', x: '18%', y: '30%' },
+        { name: 'Brasil', x: '28%', y: '60%' }
+      ]
+    };
+  }
+}
+
+/**
  * Lista a wishlist de um usuário
  * @param {number} userId - ID do usuário
  * @returns {Promise<Array>}
