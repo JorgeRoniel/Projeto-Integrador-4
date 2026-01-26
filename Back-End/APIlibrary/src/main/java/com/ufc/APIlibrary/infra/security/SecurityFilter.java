@@ -24,16 +24,17 @@ public class SecurityFilter extends OncePerRequestFilter {
     private UserRepository repository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         var token = recoveryToken(request);
-        if(token != null){
+        if (token != null) {
             var email = tokenService.validateToken(token);
             UserDetails user = repository.findByEmail(email);
 
-            if (user != null){
+            if (user != null) {
                 var authorization = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authorization);
-            }else{
+            } else {
                 System.out.println("ERROR");
             }
         }
@@ -45,13 +46,13 @@ public class SecurityFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         return path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")
-                || path.startsWith("api/user/login")
-                || path.startsWith("api/user/register");
+                || path.startsWith("/api/user/login")
+                || path.startsWith("/api/user/register");
     }
 
-    private String recoveryToken(HttpServletRequest request){
+    private String recoveryToken(HttpServletRequest request) {
         var authHeader = request.getHeader("Authorization");
-        if(authHeader == null){
+        if (authHeader == null) {
             return null;
         }
         return authHeader.replace("Bearer ", "");

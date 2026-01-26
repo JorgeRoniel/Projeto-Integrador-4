@@ -3,8 +3,11 @@ import { Heart, BookOpen, ChevronRight } from "lucide-react";
 import BookCard from "../components/BookCard";
 
 // Componente de Menu de Ações
-const ActionMenu = ({ livro, onAddWishlist, onAddMeusLivros }) => {
+const ActionMenu = ({ livro, onAddWishlist, onAddMeusLivros, wishlist, meusLivros }) => {
   const [menuAberto, setMenuAberto] = useState(false);
+
+  const isWishlisted = wishlist?.some(item => Number(item.id) === Number(livro.id));
+  const isMyBook = meusLivros?.some(item => Number(item.id) === Number(livro.id));
 
   return (
     <div className="relative">
@@ -19,10 +22,14 @@ const ActionMenu = ({ livro, onAddWishlist, onAddMeusLivros }) => {
             e.stopPropagation();
             onAddWishlist(livro);
           }}
-          className="bg-white/90 hover:bg-pink-100 p-2 rounded-full shadow-lg transition-all hover:scale-110"
-          title="Adicionar à Lista de Desejos"
+          className={`p-2 rounded-full shadow-lg transition-all hover:scale-110 ${isWishlisted ? "bg-pink-100" : "bg-white/90 hover:bg-pink-100"
+            }`}
+          title={isWishlisted ? "Na sua lista de desejos" : "Adicionar à Lista de Desejos"}
         >
-          <Heart className="text-pink-500" size={20} />
+          <Heart
+            className={isWishlisted ? "text-pink-500 fill-pink-500" : "text-pink-500"}
+            size={20}
+          />
         </button>
 
         {/* Botão Meus Livros */}
@@ -31,17 +38,21 @@ const ActionMenu = ({ livro, onAddWishlist, onAddMeusLivros }) => {
             e.stopPropagation();
             onAddMeusLivros(livro);
           }}
-          className="bg-white/90 hover:bg-blue-100 p-2 rounded-full shadow-lg transition-all hover:scale-110"
-          title="Adicionar a Meus Livros"
+          className={`p-2 rounded-full shadow-lg transition-all hover:scale-110 ${isMyBook ? "bg-blue-100" : "bg-white/90 hover:bg-blue-100"
+            }`}
+          title={isMyBook ? "Na sua coleção" : "Adicionar a Meus Livros"}
         >
-          <BookOpen className="text-[#001b4e]" size={20} />
+          <BookOpen
+            className={isMyBook ? "text-[#001b4e] fill-[#001b4e]" : "text-[#001b4e]"}
+            size={20}
+          />
         </button>
       </div>
     </div>
   );
 };
 
-function Catalogo({ livros, onAddWishlist, onAddMeusLivros }) {
+function Catalogo({ livros, onAddWishlist, onAddMeusLivros, wishlist, meusLivros }) {
   // Pegamos os 3 primeiros para destaques e o restante para recomendações
   const destaques = livros.slice(0, 3);
   const recomendacoes = livros.slice(3);
@@ -91,6 +102,8 @@ function Catalogo({ livros, onAddWishlist, onAddMeusLivros }) {
                 livro={livro}
                 onAddWishlist={onAddWishlist}
                 onAddMeusLivros={onAddMeusLivros}
+                wishlist={wishlist}
+                meusLivros={meusLivros}
               />
             </div>
           </div>
@@ -123,6 +136,8 @@ function Catalogo({ livros, onAddWishlist, onAddMeusLivros }) {
                 livro={livro}
                 onAddWishlist={onAddWishlist}
                 onAddMeusLivros={onAddMeusLivros}
+                wishlist={wishlist}
+                meusLivros={meusLivros}
               />
             </div>
           </div>

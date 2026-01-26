@@ -45,11 +45,38 @@
 | **Resultado Obtido** | Livros carregados via API e exibidos dinamicamente nos componentes `BookCard`. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
+## CT-04: Gerenciamento de Wishlist
+
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-04 |
+| **Funcionalidade** | Adicionar/Remover da Wishlist |
+| **Descrição** | Validar se o usuário consegue adicionar e remover livros da lista de desejos. |
+| **Pré-condições** | Usuário logado. |
+| **Passos** | 1. Clicar no botão ❤️ em um livro do Catálogo<br>2. Ir para a página "Lista de Desejos"<br>3. Verificar se o livro está lá<br>4. Remover o livro |
+| **Resultado Esperado** | O livro deve ser persistido na lista e removido quando solicitado. |
+| **Resultado Obtido** | Livro adicionado com sucesso e persistiu após recarregamento (F5). |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
+## CT-05: Gerenciamento de Meus Livros
+
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-05 |
+| **Funcionalidade** | Adicionar a Meus Livros |
+| **Descrição** | Validar se o usuário consegue adicionar livros à sua coleção pessoal. |
+| **Pré-condições** | Usuário logado. |
+| **Passos** | 1. Clicar no botão 📖 em um livro<br>2. Ir para a página "Meus Livros"<br>3. Verificar se o livro está lá |
+| **Resultado Esperado** | O livro deve ser adicionado à coleção do usuário. |
+| **Resultado Obtido** | Livro adicionado à coleção e nota (inicial 0) registrada com sucesso. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
+
 
 ## Resumo dos Testes
 
 O sistema iniciou o processo de integração entre Front-End e Back-End.
 1.  **Autenticação (Login/Cadastro):** INTEGRADO.
 2.  **Infraestrutura:** Docker Compose configurado.
-3.  **Catálogo:** INTEGRADO. O Front-End agora busca a lista de livros reais dinamicamente.
-4.  **Funcionalidades Adicionais (Wishlist/Meus Livros):** Próximo passo.
+3.  **Catálogo:** INTEGRADO e POPULADO.
+4.  **Funcionalidades Adicionais (Wishlist/Meus Livros):** INTEGRADO.

@@ -46,6 +46,8 @@ function AppRoutes({
             livros={livros}
             onAddWishlist={adicionarAListaDesejo}
             onAddMeusLivros={adicionarAMeusLivros}
+            wishlist={wishlist}
+            meusLivros={meusLivros}
           />
         }
       />

@@ -158,7 +158,7 @@ export async function getBook(bookId) {
 export async function rateBook(bookId, userId, nota) {
   return fetchAPI(`/api/book/${bookId}/rating`, {
     method: "POST",
-    body: JSON.stringify({ user_id: userId, nota }),
+    body: JSON.stringify({ user_id: userId, nota, comentario: "" }),
   });
 }
 
