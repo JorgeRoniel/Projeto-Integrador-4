@@ -4,5 +4,5 @@ import com.ufc.APIlibrary.dto.dashboard.DashboardResponseDTO;
 
 public interface DashboardService {
 
-    DashboardResponseDTO getDashboard();
+    DashboardResponseDTO getDashboard(Integer userId);
 }

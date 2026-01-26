@@ -22,15 +22,7 @@ public class DashboardServiceImpl implements DashboardService {
     private BookRatingRepository bookRatingRepository;
 
     @Override
-    public DashboardResponseDTO getDashboard() {
-
-        // Usuário vindo do JWT
-        User user = (User) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
-
-        Integer userId = user.getId();
+    public DashboardResponseDTO getDashboard(Integer userId) {
 
         LocalDate now = LocalDate.now();
         LocalDate startOfMonth = now.withDayOfMonth(1);
