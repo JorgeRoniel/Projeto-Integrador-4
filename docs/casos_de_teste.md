@@ -73,10 +73,37 @@
 
 
 
+## CT-06: Dashboard de Estatísticas
+
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-06 |
+| **Funcionalidade** | Dashboard de Usuário |
+| **Descrição** | Validar se as estatísticas de leitura e satisfação são carregadas corretamente. |
+| **Pré-condições** | Usuário logado com livros avaliados e na wishlist. |
+| **Passos** | 1. Acessar http://localhost:5173/dashboard |
+| **Resultado Esperado** | Exibir contagem real de livros na wishlist, % de satisfação e gráficos de categorias. |
+| **Resultado Obtido** | Dados carregados via `/api/dashboard` e exibidos nos cards e gráficos circulares. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
+## CT-07: Edição de Perfil
+
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-07 |
+| **Funcionalidade** | Gerenciamento de Perfil |
+| **Descrição** | Validar a alteração de dados cadastrais do usuário. |
+| **Pré-condições** | Usuário logado. |
+| **Passos** | 1. Acessar http://localhost:5173/perfil<br>2. Alterar Nome/Telefone<br>3. Clicar em "Salvar Alterações" |
+| **Resultado Esperado** | Dados persistidos no banco e refletidos imediatamente no sistema. |
+| **Resultado Obtido** | Chamada `PUT /api/user/{id}/update` realizada com sucesso e contexto global atualizado. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
 ## Resumo dos Testes
 
-O sistema iniciou o processo de integração entre Front-End e Back-End.
+O sistema concluiu o processo de integração entre Front-End e Back-End.
 1.  **Autenticação (Login/Cadastro):** INTEGRADO.
 2.  **Infraestrutura:** Docker Compose configurado.
 3.  **Catálogo:** INTEGRADO e POPULADO.
 4.  **Funcionalidades Adicionais (Wishlist/Meus Livros):** INTEGRADO.
+5.  **Dashboard e Perfil:** INTEGRADO.
