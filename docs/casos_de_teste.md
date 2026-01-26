@@ -11,8 +11,8 @@
 | **Massa de Teste** | Nome: Victor, Sobrenome: Mendes, Email: victor@gmail.com, Senha: 123456, Usuario: victor |
 | **Passos** | 1. Acessar http://localhost:5173/cadastro<br>2. Preencher formulário com dados válidos<br>3. Clicar em "Cadastrar" |
 | **Resultado Esperado** | Exibir mensagem de sucesso, redirecionar para login e persistir dados na tabela `users_tb`. |
-| **Resultado Obtido** | Mensagem de sucesso exibida e redirecionamento ocorreu, porém **os dados NÃO foram salvos no banco de dados**. |
-| **Status** | **( ) Aprovado**  **(X) Reprovado** |
+| **Resultado Obtido** | Mensagem de sucesso exibida e dados registrados com sucesso na tabela `users_tb` via API. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
 
 
@@ -27,12 +27,29 @@
 | **Massa de Teste** | Usuario: victor, Senha: 123456 |
 | **Passos** | 1. Acessar http://localhost:5173/login<br>2. Preencher usuário e senha<br>3. Clicar em "ENTRAR" |
 | **Resultado Esperado** | Exibir mensagem de sucesso, redirecionar para `/catalogo` e receber token JWT. |
-| **Resultado Obtido** | O frontend permite o login e redireciona para o catálogo **mesmo se o usuário não existir no banco**. Isso ocorre porque **não há verificação com o backend**, apenas validação local de preenchimento dos campos. |
-| **Status** | **( ) Aprovado**  **(X) Reprovado** (Falso Positivo) |
-| **Observações** | O Frontend atualmente é um protótipo visual (mock). Não há integração real com a API (fetch/axios) nas páginas de Login e Cadastro. |
+| **Resultado Obtido** | Login realizado com sucesso, token JWT recebido e armazenado no LocalStorage, redirecionamento para o catálogo funcionando. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+| **Observações** | Integração concluída com sucesso. O Front-End agora se comunica corretamente com o Back-End Java. |
+
+## CT-03: Listagem de Livros (Catálogo)
+
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-03 |
+| **Funcionalidade** | Listagem de Livros |
+| **Descrição** | Validar se o catálogo carrega os livros reais vindos do banco de dados. |
+| **Pré-condições** | Docker rodando (containers backend e db). Existência de livros no banco. |
+| **Massa de Teste** | N/A |
+| **Passos** | 1. Estar logado<br>2. Acessar http://localhost:3000/catalogo |
+| **Resultado Esperado** | Exibir os livros cadastrados no banco em vez dos mocks. |
+| **Resultado Obtido** | Livros carregados via API e exibidos dinamicamente nos componentes `BookCard`. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
 
 ## Resumo dos Testes
 
-O sistema possui Front-End e Back-End funcionais isoladamente, mas **não estão integrados**.
-1.  **Backend:** API e Banco de Dados funcionam (testado via inserção manual/código).
-2.  **Frontend:** Telas funcionam visualmente, mas não enviam dados para o Backend.
+O sistema iniciou o processo de integração entre Front-End e Back-End.
+1.  **Autenticação (Login/Cadastro):** INTEGRADO.
+2.  **Infraestrutura:** Docker Compose configurado.
+3.  **Catálogo:** INTEGRADO. O Front-End agora busca a lista de livros reais dinamicamente.
+4.  **Funcionalidades Adicionais (Wishlist/Meus Livros):** Próximo passo.

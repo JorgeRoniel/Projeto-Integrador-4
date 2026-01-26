@@ -13,12 +13,22 @@ function BookCard({
 
     const heightClass = size === 'large' ? 'h-80' : 'h-64';
 
+    // Se imagem for um array de bytes (Base64 vindo da API)
+    const getImagePath = (img) => {
+        if (!img) return "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop"; // Placeholder
+        if (typeof img === 'string') {
+            if (img.startsWith('http') || img.startsWith('data:')) return img;
+            return `data:image/jpeg;base64,${img}`;
+        }
+        return img;
+    };
+
     return (
         <div className="flex flex-col gap-2 group">
             {/* Card da capa do livro */}
             <div className="relative overflow-hidden rounded-2xl shadow-lg transition-transform duration-300 group-hover:scale-105 group-hover:shadow-xl">
                 <img
-                    src={livro.capa}
+                    src={getImagePath(livro.imagem || livro.capa)}
                     alt={livro.titulo}
                     className={`w-full ${heightClass} object-cover`}
                 />
@@ -37,7 +47,7 @@ function BookCard({
             {/* Avaliação */}
             {showRating && (
                 <div className="flex justify-center">
-                    <StarRating rating={livro.avaliacao} />
+                    <StarRating rating={livro.media || livro.avaliacao} />
                 </div>
             )}
 

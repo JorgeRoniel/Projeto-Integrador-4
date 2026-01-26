@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Search } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
@@ -8,51 +8,38 @@ import logoClara from "./assets/logo-roxa.png";
 
 import Sidebar from "./components/Sidebar";
 import AppRoutes from "./routes";
-
-// Base de dados mockada de livros
-const LIVROS_DISPONIVEIS = [
-  {
-    id: 1,
-    titulo: "Dom Casmurro",
-    autor: "Machado de Assis",
-    cor: "bg-zinc-900",
-  },
-  {
-    id: 2,
-    titulo: "O Alquimista",
-    autor: "Paulo Coelho",
-    cor: "bg-emerald-900",
-  },
-  { id: 3, titulo: "1984", autor: "George Orwell", cor: "bg-amber-900" },
-  {
-    id: 4,
-    titulo: "O Pequeno Príncipe",
-    autor: "A. Saint-Exupéry",
-    cor: "bg-blue-900",
-  },
-  { id: 5, titulo: "Harry Potter", autor: "J.K. Rowling", cor: "bg-red-900" },
-  {
-    id: 6,
-    titulo: "O Senhor dos Anéis",
-    autor: "J.R.R. Tolkien",
-    cor: "bg-gray-800",
-  },
-  {
-    id: 7,
-    titulo: "A Culpa é das Estrelas",
-    autor: "John Green",
-    cor: "bg-cyan-800",
-  },
-];
+import { listBooks } from "./services/api";
 
 function App() {
   const location = useLocation();
+
+  // Estado para armazenar os livros reais da API
+  const [livros, setLivros] = useState([]);
+  const [isLoadingBooks, setIsLoadingBooks] = useState(true);
 
   // Armazenamos os livros adicionados na lista de desejo
   const [wishlist, setWishlist] = useState([]);
 
   // Armazenamos os livros em "Meus Livros"
   const [meusLivros, setMeusLivros] = useState([]);
+
+  // Busca os livros ao montar o componente
+  useEffect(() => {
+    async function loadBooks() {
+      try {
+        setIsLoadingBooks(true);
+        const data = await listBooks(0, 50); // Busca os primeiros 50 livros
+        // Se a API retornar uma estrutura de Page do Spring, os dados estão em data.content
+        setLivros(data.content || data || []);
+      } catch (error) {
+        console.error("Erro ao carregar livros:", error);
+        toast.error("Não foi possível carregar o catálogo de livros.");
+      } finally {
+        setIsLoadingBooks(false);
+      }
+    }
+    loadBooks();
+  }, []);
 
   // Função para adicionar um livro à lista de desejos (evitando duplicatas)
   const adicionarAListaDesejo = (livro) => {
@@ -169,7 +156,7 @@ function App() {
               atualizarAvaliacaoLivro={atualizarAvaliacaoLivro}
               logoEscura={logoEscura}
               logoClara={logoClara}
-              livros={LIVROS_DISPONIVEIS}
+              livros={livros}
             />
           </main>
         </div>
@@ -188,7 +175,7 @@ function App() {
           atualizarAvaliacaoLivro={atualizarAvaliacaoLivro}
           logoEscura={logoEscura}
           logoClara={logoClara}
-          livros={LIVROS_DISPONIVEIS}
+          livros={livros}
         />
       )}
     </div>
