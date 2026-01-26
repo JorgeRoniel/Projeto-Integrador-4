@@ -29,14 +29,14 @@ public class UserServicesImpl implements UserServices {
     @Autowired
     private PasswordEncoder encoder;
 
-
     @Override
     public ReturnLoginDTO login(LoginUserDTO data) {
         var emailpass = new UsernamePasswordAuthenticationToken(data.email(), data.senha());
         var auth = authenticationManager.authenticate(emailpass);
         User user = (User) auth.getPrincipal();
         String token = tokenService.generateToken((User) user);
-        return new ReturnLoginDTO(token, user.getId(), user.getUsername(), user.getName(), user.getEmail(), user.getProfile(), user.getPhone_number(), user.getRole().toString());
+        return new ReturnLoginDTO(token, user.getId(), user.getUsername(), user.getName(), user.getEmail(),
+                user.getProfile(), user.getPhone_number(), user.getRole().toString());
 
     }
 
@@ -51,27 +51,29 @@ public class UserServicesImpl implements UserServices {
     public void updateUser(Integer user_id, UpdateUserDTO data) {
         var u = repository.findById(user_id).orElse(null);
 
-        if(u != null){
-            String new_pass = encoder.encode(data.senha());
+        if (u != null) {
+            if (data.senha() != null && !data.senha().isBlank()) {
+                String new_pass = encoder.encode(data.senha());
+                u.setPassword(new_pass);
+            }
 
             u.setUsername(data.username());
             u.setName(data.nome());
             u.setEmail(data.email());
-            u.setPassword(new_pass);
             u.setProfile(data.foto());
             u.setPhone_number(data.telefone());
 
             repository.save(u);
-        }else{
+        } else {
             throw new UserNotFoundException();
         }
     }
 
     @Override
     public void deleteUser(Integer user_id) {
-        if(repository.existsById(user_id)){
+        if (repository.existsById(user_id)) {
             repository.deleteById(user_id);
-        }else{
+        } else {
             throw new UserNotFoundException();
         }
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDashboardData } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -131,14 +132,17 @@ const WorldMap = ({ countries }) => (
 );
 
 function Dashboard() {
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchStats() {
+      if (!user?.id) return;
+
       try {
         setLoading(true);
-        const response = await getDashboardData();
+        const response = await getDashboardData(user.id);
         setData(response);
       } catch (error) {
         console.error("Erro ao carregar dashboard:", error);

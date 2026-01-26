@@ -155,10 +155,10 @@ export async function getBook(bookId) {
  * @param {number} nota - Nota de 0 a 5
  * @returns {Promise<{success: boolean}>}
  */
-export async function rateBook(bookId, userId, nota) {
+export async function rateBook(bookId, userId, nota, comentario = "") {
   return fetchAPI(`/api/book/${bookId}/rating`, {
     method: "POST",
-    body: JSON.stringify({ user_id: userId, nota, comentario: "" }),
+    body: JSON.stringify({ user_id: userId, nota, comentario }),
   });
 }
 
@@ -213,11 +213,12 @@ export async function removeFromWishlist(userId, bookId) {
 }
 
 /**
- * Busca estatísticas para o dashboard baseado no usuário logado (via Token)
+ * Busca estatísticas para o dashboard para um usuário específico
+ * @param {number} userId - ID do usuário
  * @returns {Promise<Object>}
  */
-export async function getDashboardData() {
-  return fetchAPI("/api/dashboard", {
+export async function getDashboardData(userId) {
+  return fetchAPI(`/api/dashboard/user/${userId}`, {
     method: "GET",
   });
 }

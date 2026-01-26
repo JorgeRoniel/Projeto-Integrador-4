@@ -181,20 +181,20 @@ function App() {
   };
 
   // Função para atualizar avaliação de um livro em "Meus Livros"
-  const atualizarAvaliacaoLivro = async (livroId, avaliacao) => {
+  const atualizarAvaliacaoLivro = async (livroId, avaliacao, comentario = "") => {
     if (!user) return;
     const bId = Number(livroId);
     try {
-      await rateBook(bId, Number(user.id), avaliacao);
+      await rateBook(bId, Number(user.id), avaliacao, comentario);
       setMeusLivros((prevLivros) =>
         prevLivros.map((livro) =>
-          Number(livro.id) === bId ? { ...livro, avaliacao } : livro,
+          Number(livro.id) === bId ? { ...livro, avaliacao, comentario } : livro,
         ),
       );
-      toast.success("Avaliação atualizada!");
+      toast.success("Avaliação salva com sucesso!");
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao atualizar avaliação.");
+      toast.error("Erro ao salvar avaliação.");
     }
   };
 
