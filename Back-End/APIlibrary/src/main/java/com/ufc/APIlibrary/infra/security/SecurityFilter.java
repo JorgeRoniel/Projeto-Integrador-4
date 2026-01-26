@@ -45,8 +45,9 @@ public class SecurityFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         return path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")
-                || path.startsWith("api/user/login")
-                || path.startsWith("api/user/register");
+                || path.equals("/api/user/login")
+                || path.equals("/api/user/register")
+                || request.getMethod().equalsIgnoreCase("OPTIONS"); 
     }
 
     private String recoveryToken(HttpServletRequest request){
