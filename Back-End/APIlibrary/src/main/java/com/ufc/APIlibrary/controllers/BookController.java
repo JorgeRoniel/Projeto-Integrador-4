@@ -4,7 +4,6 @@ import com.ufc.APIlibrary.domain.Book.Book;
 import com.ufc.APIlibrary.dto.book.*;
 import com.ufc.APIlibrary.services.book.BookService;
 import com.ufc.APIlibrary.services.book.RatingBookService;
-import com.ufc.APIlibrary.services.book.WishListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,8 +23,6 @@ public class BookController {
     private BookService bookService;
     @Autowired
     private RatingBookService ratingBookService;
-    @Autowired
-    private WishListService wishListService;
 
     @PostMapping
     @org.springframework.security.access.annotation.Secured("ROLE_ADMIN")
@@ -54,7 +51,7 @@ public class BookController {
     }
 
     @PostMapping("/{id}/rating")
-    public ResponseEntity doRatingRoute(@PathVariable("id") Integer book_id, @RequestBody DoRatingBookDTO data) {
+    public ResponseEntity<Void> doRatingRoute(@PathVariable("id") Integer book_id, @RequestBody DoRatingBookDTO data) {
 
         ratingBookService.rating(data, book_id);
         return ResponseEntity.ok().build();
@@ -68,7 +65,7 @@ public class BookController {
 
     @DeleteMapping("/{id}/delete")
     @org.springframework.security.access.annotation.Secured("ROLE_ADMIN")
-    public ResponseEntity deleteBook(@PathVariable("id") Integer book_id) {
+    public ResponseEntity<Void> deleteBook(@PathVariable("id") Integer book_id) {
         bookService.deleteBook(book_id);
         return ResponseEntity.ok().build();
     }

@@ -42,17 +42,17 @@
 | **Resultado Obtido** | Catálogo carregado com sucesso. Configuração de CORS unificada e rota `/api/book` tornada pública. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
-## CT-04: Gerenciamento de Wishlist
+## CT-04: Gerenciamento de Wishlist e Notificações
 
 | Campo | Descrição |
 | --- | --- |
 | **Identificador** | CT-04 |
-| **Funcionalidade** | Adicionar/Remover da Wishlist |
-| **Descrição** | Validar persistência da lista de desejos. |
+| **Funcionalidade** | Adicionar/Remover da Wishlist e Alternar Notificação |
+| **Descrição** | Validar persistência da lista de desejos e do estado de notificações de novos livros. |
 | **Pré-condições** | Usuário logado. |
-| **Passos** | 1. Marcar ❤️ no catálogo<br>2. Recarregar a página (F5) |
-| **Resultado Esperado** | O estado do coração (preenchido) deve persistir. |
-| **Resultado Obtido** | Wishlist persistida no banco e sincronizada via API em tempo real. |
+| **Passos** | 1. Marcar ❤️ no catálogo<br>2. Ativar/Desativar o ícone de sininho na Wishlist<br>3. Recarregar a página (F5) |
+| **Resultado Esperado** | O estado do coração e o estado da notificação devem persistir no banco. |
+| **Resultado Obtido** | Wishlist e estado de notificação persistidos no banco e sincronizados via API (`PUT /api/wishlist/notification`). |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
 ## CT-05: Avaliação e Comentários (Meus Livros)
@@ -68,17 +68,17 @@
 | **Resultado Obtido** | Sincronização corrigida: Front-End agora chama `POST /api/book/{id}/rating` em todas as atualizações. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
-## CT-06: Dashboard de Estatísticas Real
+## CT-06: Dashboard de Estatísticas Detalhado
 
 | Campo | Descrição |
 | --- | --- |
 | **Identificador** | CT-06 |
-| **Funcionalidade** | Dashboard por Usuário |
-| **Descrição** | Validar carregamento de dados específicos do usuário logado. |
-| **Pré-condições** | Usuário com atividades no sistema. |
+| **Funcionalidade** | Dashboard por Usuário com Métricas Avançadas |
+| **Descrição** | Validar carregamento de dados e estatísticas (Top Autores, Categorias, Ritmo de Leitura). |
+| **Pré-condições** | Usuário com atividades (livros na wishlist e livros avaliados). |
 | **Passos** | 1. Acessar Dashboard |
-| **Resultado Esperado** | Gráficos e números devem refletir APENAS os dados do usuário atual (via `userId`). |
-| **Resultado Obtido** | Dashboard integrada à nova rota `/api/dashboard/user/{id}`. Dados reais exibidos corretamente. |
+| **Resultado Esperado** | Exibir: Total de Wishlist, % de Satisfação, Livros lidos no mês/ano, e Rankings de autores/categorias. |
+| **Resultado Obtido** | Dashboard integrada à nova lógica de `DashboardServiceImpl`. Cálculos de média de rating e rankings processados corretamente pelo banco. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
 ## CT-07: Edição de Perfil e Segurança
@@ -158,6 +158,19 @@
 | **Passos** | 1. Acessar detalhes do livro no Catálogo ou Meus Livros |
 | **Resultado Esperado** | Lista de comentários e notas de diferentes usuários visíveis. |
 | **Resultado Obtido** | API retornando lista completa de avaliações por livro. Frontend mapeado para exibir o histórico social. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
+## CT-13: Remoção de Livros (Administrativo)
+
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-13 |
+| **Funcionalidade** | Exclusão de Livros (Segurança) |
+| **Descrição** | Validar se um administrador pode remover um livro do sistema. |
+| **Pré-condições** | Usuário com ROLE_ADMIN logado. |
+| **Passos** | 1. Enviar requisição DELETE para `/api/book/{id}/delete` |
+| **Resultado Esperado** | Livro removido do banco e catálogo. Endpoint deve exigir autorização de ADMIN. |
+| **Resultado Obtido** | Lógica de exclusão implementada e protegida com `@Secured("ROLE_ADMIN")` no Back-End. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
 ## Resumo Final da Integração

@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,13 +29,9 @@ public class Book {
     private Integer date_publication;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
-            name = "book_categories",
-            joinColumns = @JoinColumn(name = "id")
-    )
+    @CollectionTable(name = "book_categories", joinColumns = @JoinColumn(name = "id"))
 
     private List<String> category = new ArrayList<>();
-
 
     private String description;
     private byte[] preview_picture;
@@ -45,7 +40,8 @@ public class Book {
     private Float rating_avg = 0f;
     private LocalDate acquision_date;
 
-    public Book(String title, String author, String publisher, String edition, Integer date_publication, List<String> categories, String description, byte[] preview_picture) {
+    public Book(String title, String author, String publisher, String edition, Integer date_publication,
+            List<String> categories, String description, byte[] preview_picture) {
         this.title = title;
         this.author = author;
         this.publisher = publisher;
