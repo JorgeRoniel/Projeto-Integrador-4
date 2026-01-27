@@ -107,7 +107,8 @@ function Perfil() {
       setSenha({ nova: '', confirmar: '' });
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error);
-      toast.error("Erro ao salvar alterações.");
+      const msg = error.message || "Erro ao salvar alterações.";
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

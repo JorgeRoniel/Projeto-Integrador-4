@@ -10,6 +10,8 @@ import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
 import com.ufc.APIlibrary.repositories.UserRepository;
 import com.ufc.APIlibrary.services.token.TokenService;
 import com.ufc.APIlibrary.services.user.UserServices;
+import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.EmailAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.PhoneNumberAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,6 +44,13 @@ public class UserServicesImpl implements UserServices {
 
     @Override
     public User register(RegisterUserDTO data) throws RegisterErrorException {
+        if (repository.existsByEmail(data.email())) {
+            throw new EmailAlreadyExistsException();
+        }
+        if (repository.existsByPhoneNumber(data.telefone())) {
+            throw new PhoneNumberAlreadyExistsException();
+        }
+
         String pass = encoder.encode(data.senha());
         // Constructor expectations: username, name, email, password, phone, role
         User u = new User(data.username(), data.nome(), data.email(), pass, data.telefone(), data.role());
@@ -56,6 +65,14 @@ public class UserServicesImpl implements UserServices {
             if (data.senha() != null && !data.senha().isBlank()) {
                 String new_pass = encoder.encode(data.senha());
                 u.setPassword(new_pass);
+            }
+
+            // Uniqueness checks for Update
+            if (!u.getEmail().equals(data.email()) && repository.existsByEmail(data.email())) {
+                throw new EmailAlreadyExistsException();
+            }
+            if (!u.getPhone_number().equals(data.telefone()) && repository.existsByPhoneNumber(data.telefone())) {
+                throw new PhoneNumberAlreadyExistsException();
             }
 
             u.setUsername(data.username());

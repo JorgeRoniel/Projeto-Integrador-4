@@ -7,6 +7,8 @@ import com.ufc.APIlibrary.infra.exceptions.user.RatingNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.RegisterErrorException;
 import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.WishListNotFoundException;
+import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.EmailAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.PhoneNumberAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -16,6 +18,18 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<FormaterRestException> emailAlreadyExists(EmailAlreadyExistsException exception) {
+        FormaterRestException response = new FormaterRestException(HttpStatus.CONFLICT, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(PhoneNumberAlreadyExistsException.class)
+    public ResponseEntity<FormaterRestException> phoneAlreadyExists(PhoneNumberAlreadyExistsException exception) {
+        FormaterRestException response = new FormaterRestException(HttpStatus.CONFLICT, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
 
     // TRATAMENTO DE EXCESSÕES ACERCA DAS FUNÇÕES DO CONTROLLER 'USERCONTROLLER'
     @ExceptionHandler(AuthenticationException.class)
