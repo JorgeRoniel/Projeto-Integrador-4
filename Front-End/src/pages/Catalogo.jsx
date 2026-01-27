@@ -58,20 +58,20 @@ function Catalogo({ livros: initialLivros, onAddWishlist, onAddMeusLivros, wishl
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isSearching, setIsSearching] = React.useState(false);
 
-  // Sincroniza com as props se não houver busca ativa
+  // Debounce para busca em tempo real
   React.useEffect(() => {
-    if (!searchQuery) {
-      setLivros(initialLivros);
-    }
-  }, [initialLivros, searchQuery]);
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        performSearch();
+      } else {
+        setLivros(initialLivros);
+      }
+    }, 500); // esperas 500ms após o último caractere digitado
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) {
-      setLivros(initialLivros);
-      return;
-    }
+    return () => clearTimeout(timer);
+  }, [searchQuery, initialLivros]);
 
+  const performSearch = async () => {
     try {
       setIsSearching(true);
       const results = await searchBooks(searchQuery);
@@ -84,9 +84,13 @@ function Catalogo({ livros: initialLivros, onAddWishlist, onAddMeusLivros, wishl
     }
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    performSearch();
+  };
+
   const clearSearch = () => {
     setSearchQuery("");
-    setLivros(initialLivros);
   };
 
   // Pegamos os 3 primeiros para destaques e o restante para recomendações
