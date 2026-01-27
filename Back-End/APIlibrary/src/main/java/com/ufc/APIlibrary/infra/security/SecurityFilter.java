@@ -24,17 +24,26 @@ public class SecurityFilter extends OncePerRequestFilter {
     private UserRepository repository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         var token = recoveryToken(request);
-        if(token != null){
-            var email = tokenService.validateToken(token);
-            UserDetails user = repository.findByEmail(email);
+        if (token != null) {
+            var subject = tokenService.validateToken(token);
+            try {
+                Integer userId = Integer.parseInt(subject);
+                UserDetails user = repository.findById(userId).orElse(null);
 
-            if (user != null){
-                var authorization = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authorization);
-            }else{
-                System.out.println("ERROR");
+                if (user != null) {
+                    var authorization = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authorization);
+                }
+            } catch (NumberFormatException e) {
+                // Legado: tenta por email se não for número (opcional, mas bom pra transição)
+                UserDetails user = repository.findByEmail(subject);
+                if (user != null) {
+                    var authorization = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authorization);
+                }
             }
         }
         filterChain.doFilter(request, response);
@@ -45,14 +54,14 @@ public class SecurityFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         return path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")
-                || path.equals("/api/user/login")
-                || path.equals("/api/user/register")
-                || request.getMethod().equalsIgnoreCase("OPTIONS"); 
+                || path.startsWith("/api/user/login")
+                || path.startsWith("/api/user/register")
+                || request.getMethod().equalsIgnoreCase("OPTIONS");
     }
 
-    private String recoveryToken(HttpServletRequest request){
+    private String recoveryToken(HttpServletRequest request) {
         var authHeader = request.getHeader("Authorization");
-        if(authHeader == null){
+        if (authHeader == null) {
             return null;
         }
         return authHeader.replace("Bearer ", "");

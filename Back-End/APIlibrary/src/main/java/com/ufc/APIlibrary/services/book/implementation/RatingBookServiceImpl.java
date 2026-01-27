@@ -31,20 +31,34 @@ public class RatingBookServiceImpl implements RatingBookService {
 
     @Override
     public String rating(DoRatingBookDTO data, Integer book_id) {
-
         if (data.nota() == null || data.nota() < 0 || data.nota() > 5) {
             throw new InvalidRatingException();
         }
 
-        User user = userRepository.findById(data.user_id())
-                .orElseThrow(UserNotFoundException::new);
+        // Tenta encontrar avaliação existente para o par Usuário/Livro
+        BookRating rating = repository.findByUserIdAndBookId(data.user_id(), book_id);
 
-        Book book = bookRepository.findById(book_id)
-                .orElseThrow(BookNotFoundException::new);
+        if (rating != null) {
+            // Atualiza existente
+            rating.setRating(data.nota());
+            rating.setReview(data.comentario());
+            rating.setDate_review(java.time.LocalDate.now());
+            repository.save(rating);
+        } else {
+            // Cria nova
+            User user = userRepository.findById(data.user_id())
+                    .orElseThrow(UserNotFoundException::new);
+            Book book = bookRepository.findById(book_id)
+                    .orElseThrow(BookNotFoundException::new);
 
-        BookRating rating = new BookRating(user, book, data.nota(), data.comentario());
-        repository.save(rating);
-        
+            BookRating newRating = new BookRating(user, book, data.nota(), data.comentario());
+            // Vincula explicitamente o ID composto
+            newRating.getId().setUserId(user.getId());
+            newRating.getId().setBookId(book.getId());
+
+            repository.save(newRating);
+        }
+
         return "OK";
     }
 
@@ -63,15 +77,17 @@ public class RatingBookServiceImpl implements RatingBookService {
     @Override
     public List<ReturnBookShortDTO> listRatedBooksByUser(Integer user_id) {
         List<BookRating> ratings = repository.findByUserId(user_id);
-        if (!ratings.isEmpty()){
+        if (!ratings.isEmpty()) {
             return ratings.stream().map(r -> new ReturnBookShortDTO(
                     r.getBook().getId(),
                     r.getBook().getTitle(),
                     r.getBook().getAuthor(),
                     r.getBook().getPreview_picture(),
                     r.getBook().getRating_avg(),
-                    r.getBook().getCategory())).toList();
-        }else {
+                    r.getBook().getCategory(),
+                    r.getRating(),
+                    r.getReview())).toList();
+        } else {
             throw new RatingNotFoundException();
         }
     }

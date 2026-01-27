@@ -146,6 +146,17 @@ export async function getBook(bookId) {
   });
 }
 
+/**
+ * Pesquisa livros por título, autor ou categoria
+ * @param {string} query - Termo de busca
+ * @returns {Promise<Array>}
+ */
+export async function searchBooks(query) {
+  return fetchAPI(`/api/book/search?query=${encodeURIComponent(query)}`, {
+    method: "GET",
+  });
+}
+
 // ==================== AVALIAÇÕES ====================
 
 /**
@@ -155,10 +166,10 @@ export async function getBook(bookId) {
  * @param {number} nota - Nota de 0 a 5
  * @returns {Promise<{success: boolean}>}
  */
-export async function rateBook(bookId, userId, nota) {
+export async function rateBook(bookId, userId, nota, comentario = "") {
   return fetchAPI(`/api/book/${bookId}/rating`, {
     method: "POST",
-    body: JSON.stringify({ user_id: userId, nota }),
+    body: JSON.stringify({ user_id: userId, nota, comentario }),
   });
 }
 
@@ -213,6 +224,17 @@ export async function removeFromWishlist(userId, bookId) {
 }
 
 /**
+ * Busca estatísticas para o dashboard para um usuário específico
+ * @param {number} userId - ID do usuário
+ * @returns {Promise<Object>}
+ */
+export async function getDashboardData(userId) {
+  return fetchAPI(`/api/dashboard/user/${userId}`, {
+    method: "GET",
+  });
+}
+
+/**
  * Lista a wishlist de um usuário
  * @param {number} userId - ID do usuário
  * @returns {Promise<Array>}
@@ -236,4 +258,5 @@ export default {
   addToWishlist,
   removeFromWishlist,
   getUserWishlist,
+  getDashboardData,
 };

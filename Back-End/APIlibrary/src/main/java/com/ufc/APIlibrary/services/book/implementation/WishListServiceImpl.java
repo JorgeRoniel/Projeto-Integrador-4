@@ -2,7 +2,6 @@ package com.ufc.APIlibrary.services.book.implementation;
 
 import com.ufc.APIlibrary.domain.Book.Book;
 import com.ufc.APIlibrary.domain.Book.WishList;
-import com.ufc.APIlibrary.domain.Book.WishListId;
 import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.dto.book.DatasForWishListDTO;
 import com.ufc.APIlibrary.dto.book.NotificationDTO;
@@ -33,7 +32,7 @@ public class WishListServiceImpl implements WishListService {
     @Override
     public void addBookInWL(DatasForWishListDTO data) {
 
-        if(repository.existsByUserIdAndBookId(data.user_id(), data.book_id())){
+        if (repository.existsByUserIdAndBookId(data.user_id(), data.book_id())) {
             throw new WishListAlreadyExistsException();
         }
 
@@ -50,7 +49,7 @@ public class WishListServiceImpl implements WishListService {
     @Override
     public List<WishListDTO> listUsersWishes(Integer user_id) {
         List<WishList> wl = repository.findByUserId(user_id);
-        if (!wl.isEmpty()){
+        if (!wl.isEmpty()) {
             return wl.stream().map(w -> new WishListDTO(
                     w.getBook().getId(),
                     w.getBook().getTitle(),
@@ -58,9 +57,8 @@ public class WishListServiceImpl implements WishListService {
                     w.getBook().getPreview_picture(),
                     w.getBook().getRating_avg(),
                     w.getBook().getCategory(),
-                    w.getNotification()
-            )).toList();
-        }else{
+                    w.getNotification())).toList();
+        } else {
             throw new WishListNotFoundException();
         }
     }

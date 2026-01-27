@@ -10,10 +10,11 @@ import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
 import com.ufc.APIlibrary.repositories.UserRepository;
 import com.ufc.APIlibrary.services.token.TokenService;
 import com.ufc.APIlibrary.services.user.UserServices;
+import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.EmailAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.PhoneNumberAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,21 +30,29 @@ public class UserServicesImpl implements UserServices {
     @Autowired
     private PasswordEncoder encoder;
 
-
     @Override
     public ReturnLoginDTO login(LoginUserDTO data) {
         var emailpass = new UsernamePasswordAuthenticationToken(data.email(), data.senha());
         var auth = authenticationManager.authenticate(emailpass);
         User user = (User) auth.getPrincipal();
         String token = tokenService.generateToken((User) user);
-        return new ReturnLoginDTO(token, user.getId(), user.getUsername(), user.getName(), user.getEmail(), user.getProfile(), user.getPhone_number(), user.getRole().toString());
+        return new ReturnLoginDTO(token, user.getId(), user.getUsername(), user.getName(), user.getEmail(),
+                user.getProfile(), user.getPhone_number(), user.getRole().toString());
 
     }
 
     @Override
     public User register(RegisterUserDTO data) throws RegisterErrorException {
+        if (repository.existsByEmail(data.email())) {
+            throw new EmailAlreadyExistsException();
+        }
+        if (repository.existsByPhoneNumber(data.telefone())) {
+            throw new PhoneNumberAlreadyExistsException();
+        }
+
         String pass = encoder.encode(data.senha());
-        User u = new User(data.nome(), data.username(), data.email(), pass, data.telefone(), data.role());
+        // Constructor expectations: username, name, email, password, phone, role
+        User u = new User(data.username(), data.nome(), data.email(), pass, data.telefone(), data.role());
         return repository.save(u);
     }
 
@@ -51,27 +60,37 @@ public class UserServicesImpl implements UserServices {
     public void updateUser(Integer user_id, UpdateUserDTO data) {
         var u = repository.findById(user_id).orElse(null);
 
-        if(u != null){
-            String new_pass = encoder.encode(data.senha());
+        if (u != null) {
+            if (data.senha() != null && !data.senha().isBlank()) {
+                String new_pass = encoder.encode(data.senha());
+                u.setPassword(new_pass);
+            }
+
+            // Uniqueness checks for Update
+            if (!u.getEmail().equals(data.email()) && repository.existsByEmail(data.email())) {
+                throw new EmailAlreadyExistsException();
+            }
+            if (!u.getPhone_number().equals(data.telefone()) && repository.existsByPhoneNumber(data.telefone())) {
+                throw new PhoneNumberAlreadyExistsException();
+            }
 
             u.setUsername(data.username());
             u.setName(data.nome());
             u.setEmail(data.email());
-            u.setPassword(new_pass);
             u.setProfile(data.foto());
             u.setPhone_number(data.telefone());
 
             repository.save(u);
-        }else{
+        } else {
             throw new UserNotFoundException();
         }
     }
 
     @Override
     public void deleteUser(Integer user_id) {
-        if(repository.existsById(user_id)){
+        if (repository.existsById(user_id)) {
             repository.deleteById(user_id);
-        }else{
+        } else {
             throw new UserNotFoundException();
         }
     }

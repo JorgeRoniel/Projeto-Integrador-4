@@ -12,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 @Service
@@ -20,7 +19,6 @@ public class BookServiceImpl implements BookService {
 
     @Autowired
     private BookRepository repository;
-
 
     @Override
     public Page<ReturnBookShortDTO> listToHome(Pageable pageable) {
@@ -32,7 +30,9 @@ public class BookServiceImpl implements BookService {
                 book.getAuthor(),
                 book.getPreview_picture(),
                 book.getRating_avg(),
-                book.getCategory()));
+                book.getCategory(),
+                null,
+                null));
 
         return returnFormated;
     }
@@ -55,7 +55,6 @@ public class BookServiceImpl implements BookService {
     @Override
     public Book registerBook(BookRegisterDTO data) {
 
-
         Book book = new Book(
                 data.titulo(),
                 data.autor(),
@@ -64,8 +63,7 @@ public class BookServiceImpl implements BookService {
                 data.ano_publicacao(),
                 data.categorias(),
                 data.descricao(),
-                data.imagem()
-        );
+                data.imagem());
 
         return repository.save(book);
 
@@ -77,5 +75,23 @@ public class BookServiceImpl implements BookService {
             throw new BookNotFoundException();
         }
         repository.deleteById(id);
+    }
+
+    @Override
+    public java.util.List<ReturnBookShortDTO> searchBooks(String query) {
+        java.util.Set<Book> results = new java.util.HashSet<>();
+        results.addAll(repository.findByTitleContainingIgnoreCase(query));
+        results.addAll(repository.findByAuthorContainingIgnoreCase(query));
+        results.addAll(repository.findByCategoryContainingIgnoreCase(query));
+
+        return results.stream().map(book -> new ReturnBookShortDTO(
+                book.getId(),
+                book.getTitle(),
+                book.getAuthor(),
+                book.getPreview_picture(),
+                book.getRating_avg(),
+                book.getCategory(),
+                null,
+                null)).toList();
     }
 }

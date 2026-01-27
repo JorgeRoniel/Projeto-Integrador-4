@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Search } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
@@ -8,45 +8,16 @@ import logoClara from "./assets/logo-roxa.png";
 
 import Sidebar from "./components/Sidebar";
 import AppRoutes from "./routes";
-
-// Base de dados mockada de livros
-const LIVROS_DISPONIVEIS = [
-  {
-    id: 1,
-    titulo: "Dom Casmurro",
-    autor: "Machado de Assis",
-    cor: "bg-zinc-900",
-  },
-  {
-    id: 2,
-    titulo: "O Alquimista",
-    autor: "Paulo Coelho",
-    cor: "bg-emerald-900",
-  },
-  { id: 3, titulo: "1984", autor: "George Orwell", cor: "bg-amber-900" },
-  {
-    id: 4,
-    titulo: "O Pequeno Príncipe",
-    autor: "A. Saint-Exupéry",
-    cor: "bg-blue-900",
-  },
-  { id: 5, titulo: "Harry Potter", autor: "J.K. Rowling", cor: "bg-red-900" },
-  {
-    id: 6,
-    titulo: "O Senhor dos Anéis",
-    autor: "J.R.R. Tolkien",
-    cor: "bg-gray-800",
-  },
-  {
-    id: 7,
-    titulo: "A Culpa é das Estrelas",
-    autor: "John Green",
-    cor: "bg-cyan-800",
-  },
-];
+import { listBooks, addToWishlist, removeFromWishlist, getUserWishlist, rateBook, getUserRatings } from "./services/api";
+import { useAuth } from "./contexts/AuthContext";
 
 function App() {
   const location = useLocation();
+  const { user } = useAuth();
+
+  // Estado para armazenar os livros reais da API
+  const [livros, setLivros] = useState([]);
+  const [isLoadingBooks, setIsLoadingBooks] = useState(true);
 
   // Armazenamos os livros adicionados na lista de desejo
   const [wishlist, setWishlist] = useState([]);
@@ -54,76 +25,181 @@ function App() {
   // Armazenamos os livros em "Meus Livros"
   const [meusLivros, setMeusLivros] = useState([]);
 
-  // Função para adicionar um livro à lista de desejos (evitando duplicatas)
-  const adicionarAListaDesejo = (livro) => {
-    if (meusLivros.find((item) => item.id === livro.id)) {
-      toast.error("Este livro já está em Meus Livros!", {
-        duration: 3000,
-        position: "bottom-right",
-      });
+  // Busca os livros ao montar o componente
+  useEffect(() => {
+    async function loadBooks() {
+      try {
+        setIsLoadingBooks(true);
+        const data = await listBooks(0, 50);
+        setLivros(data.content || data || []);
+      } catch (error) {
+        console.error("Erro ao carregar livros:", error);
+        toast.error("Não foi possível carregar o catálogo de livros.", { id: 'error-catalog' });
+      } finally {
+        setIsLoadingBooks(false);
+      }
+    }
+    loadBooks();
+  }, []);
+
+  // Busca Wishlist quando o usuário logar
+  useEffect(() => {
+    async function loadWishlist() {
+      if (user?.id) {
+        try {
+          const data = await getUserWishlist(user.id);
+          setWishlist(Array.isArray(data) ? data : []);
+        } catch (error) {
+          console.warn("[Wishlist] Lista vazia:", error);
+          setWishlist([]);
+        }
+      } else {
+        setWishlist([]);
+      }
+    }
+    loadWishlist();
+  }, [user?.id]);
+
+  // Busca Meus Livros quando o usuário logar
+  useEffect(() => {
+    async function loadMyBooks() {
+      if (user?.id) {
+        try {
+          const data = await getUserRatings(Number(user.id));
+          const formatted = (data || []).map(book => ({
+            ...book,
+            // Prioridade para 'nota' que agora vem no ReturnBookShortDTO
+            avaliacao: book.nota !== undefined && book.nota !== null ? Number(book.nota) : (book.rating || book.media || 0)
+          }));
+          setMeusLivros(formatted);
+        } catch (error) {
+          console.warn("[Meus Livros] Lista vazia ou erro:", error);
+          setMeusLivros([]);
+        }
+      } else {
+        setMeusLivros([]);
+      }
+    }
+    loadMyBooks();
+  }, [user?.id]);
+
+  // Função para adicionar um livro à lista de desejos
+  const adicionarAListaDesejo = async (livro) => {
+    if (!user) {
+      toast.error("Faça login para adicionar à lista de desejos!");
       return;
     }
-    if (!wishlist.find((item) => item.id === livro.id)) {
-      setWishlist([...wishlist, livro]);
-      toast.success(`"${livro.titulo}" adicionado à lista de desejos!`, {
-        duration: 3000,
-        position: "bottom-right",
-      });
+
+    const bookId = Number(livro.id);
+    const userId = Number(user.id);
+
+    if (meusLivros.find((item) => Number(item.id) === bookId)) {
+      toast.error("Este livro já está em Meus Livros!");
+      return;
+    }
+
+    if (!wishlist.find((item) => Number(item.id) === bookId)) {
+      try {
+        await addToWishlist(userId, bookId);
+        setWishlist(prev => [...prev, livro]);
+        toast.success(`"${livro.titulo}" adicionado à lista de desejos!`);
+      } catch (error) {
+        // Se já existe (409), atualizamos o estado local para refletir isso
+        if (error.status === 409 || String(error.message).includes('409')) {
+          setWishlist(prev => {
+            if (!prev.find(item => Number(item.id) === bookId)) {
+              return [...prev, livro];
+            }
+            return prev;
+          });
+          toast.success(`"${livro.titulo}" já está na sua lista!`);
+        } else {
+          toast.error("Erro ao adicionar à wishlist.");
+          console.error("Erro completo:", error);
+        }
+      }
     } else {
-      toast.error("Este livro já está na sua lista de desejos!", {
-        duration: 3000,
-        position: "bottom-right",
-      });
+      toast.error("Este livro já está na sua lista de desejos!");
     }
   };
 
   // Função para remover um livro da lista de desejo
-  const removerDaListaDesejo = (id) => {
-    setWishlist(wishlist.filter((livro) => livro.id !== id));
+  const removerDaListaDesejo = async (id) => {
+    if (!user) return;
+    try {
+      await removeFromWishlist(Number(user.id), Number(id));
+      setWishlist(prev => prev.filter((livro) => Number(livro.id) !== Number(id)));
+      toast.success("Removido da lista de desejos.");
+    } catch (error) {
+      console.error("Erro ao remover da wishlist:", error);
+      toast.error("Erro ao remover.");
+    }
   };
 
-  // Função para adicionar um livro a "Meus Livros" (evitando duplicatas)
-  const adicionarAMeusLivros = (livro) => {
-    if (!meusLivros.find((item) => item.id === livro.id)) {
-      const livroComAvaliacao = { ...livro, avaliacao: null };
-      setMeusLivros([...meusLivros, livroComAvaliacao]);
-      toast.success(`"${livro.titulo}" adicionado a Meus Livros!`, {
-        duration: 3000,
-        position: "bottom-right",
-      });
+  // Função para adicionar um livro a "Meus Livros"
+  const adicionarAMeusLivros = async (livro) => {
+    if (!user) {
+      toast.error("Faça login para salvar seus livros!");
+      return;
+    }
+
+    const bookId = Number(livro.id);
+    const userId = Number(user.id);
+    if (!meusLivros.find((item) => Number(item.id) === bookId)) {
+      try {
+        await rateBook(bookId, userId, 0);
+        const livroComAvaliacao = { ...livro, id: bookId, avaliacao: 0 };
+        setMeusLivros(prev => [...prev, livroComAvaliacao]);
+        toast.success(`"${livro.titulo}" adicionado a Meus Livros!`);
+      } catch (error) {
+        console.error("Erro ao adicionar:", error);
+        toast.error("Erro ao adicionar a Meus Livros.");
+      }
     } else {
-      toast.error("Este livro já está em Meus Livros!", {
-        duration: 3000,
-        position: "bottom-right",
-      });
+      toast.error("Este livro já está em Meus Livros!");
     }
   };
 
   // Função para mover livro da lista de desejos para "Meus Livros"
-  const moverParaMeusLivros = (livro) => {
-    if (!meusLivros.find((item) => item.id === livro.id)) {
-      const livroComAvaliacao = { ...livro, avaliacao: null };
-      setMeusLivros([...meusLivros, livroComAvaliacao]);
-      setWishlist(wishlist.filter((item) => item.id !== livro.id));
-      toast.success(`"${livro.titulo}" movido para Meus Livros!`, {
-        duration: 3000,
-        position: "bottom-right",
-      });
+  const moverParaMeusLivros = async (livro) => {
+    const bookId = Number(livro.id);
+    const userId = Number(user.id);
+    if (!meusLivros.find((item) => Number(item.id) === bookId)) {
+      try {
+        await rateBook(bookId, userId, 0);
+        await removeFromWishlist(userId, bookId);
+
+        const livroComAvaliacao = { ...livro, id: bookId, avaliacao: 0 };
+        setMeusLivros(prev => [...prev, livroComAvaliacao]);
+        setWishlist(prev => prev.filter((item) => Number(item.id) !== bookId));
+
+        toast.success(`"${livro.titulo}" movido para Meus Livros!`);
+      } catch (error) {
+        console.error("Erro ao mover:", error);
+        toast.error("Erro ao mover para Meus Livros.");
+      }
     } else {
-      toast.error("Este livro já está em Meus Livros!", {
-        duration: 3000,
-        position: "bottom-right",
-      });
+      toast.error("Este livro já está em Meus Livros!");
     }
   };
 
   // Função para atualizar avaliação de um livro em "Meus Livros"
-  const atualizarAvaliacaoLivro = (livroId, avaliacao) => {
-    setMeusLivros((prevLivros) =>
-      prevLivros.map((livro) =>
-        livro.id === livroId ? { ...livro, avaliacao } : livro,
-      ),
-    );
+  const atualizarAvaliacaoLivro = async (livroId, avaliacao, comentario = "") => {
+    if (!user) return;
+    const bId = Number(livroId);
+    const uId = Number(user.id);
+    try {
+      await rateBook(bId, uId, Number(avaliacao), String(comentario));
+      setMeusLivros((prevLivros) =>
+        prevLivros.map((livro) =>
+          Number(livro.id) === bId ? { ...livro, id: bId, avaliacao, comentario } : livro,
+        ),
+      );
+      toast.success("Avaliação salva com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar avaliação:", error);
+      toast.error("Erro ao salvar avaliação.");
+    }
   };
 
   const isAppView = [
@@ -169,7 +245,7 @@ function App() {
               atualizarAvaliacaoLivro={atualizarAvaliacaoLivro}
               logoEscura={logoEscura}
               logoClara={logoClara}
-              livros={LIVROS_DISPONIVEIS}
+              livros={livros}
             />
           </main>
         </div>
@@ -188,7 +264,7 @@ function App() {
           atualizarAvaliacaoLivro={atualizarAvaliacaoLivro}
           logoEscura={logoEscura}
           logoClara={logoClara}
-          livros={LIVROS_DISPONIVEIS}
+          livros={livros}
         />
       )}
     </div>

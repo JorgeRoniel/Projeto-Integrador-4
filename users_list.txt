@@ -1,0 +1,14 @@
+﻿ id |     username     |               email               
+----+------------------+-----------------------------------
+  1 | Victor           | victor@gmail.co
+  3 | Victor  Mendes   | victor@gmail.com
+  9 | Victor 2 Mendes  | victorlopesmendesvm1@gmail.com
+ 12 | Victor 23 Mendes | victor@gmail.com
+ 13 | Victor Mendes m  | victorlopesmendesvm1@gmail.com
+ 14 | victor1          | victorlopesmendesvm1@gmail.com
+ 18 | victor12         | victorlopesmendesvm1@gmail.com
+ 22 | victor123        | victorlopesmendesvm21@gmail.com
+ 23 | victor14         | victorlopesmendesvm1@gmail.com
+ 25 | victor0          | victorlopesmendesvm1234@gmail.com
+(10 rows)
+

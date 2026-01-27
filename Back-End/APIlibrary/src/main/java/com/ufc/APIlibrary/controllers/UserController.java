@@ -28,36 +28,37 @@ public class UserController {
     private WishListService wishListService;
 
     @PostMapping("/register")
-    public ResponseEntity register(@RequestBody RegisterUserDTO data){
+    public ResponseEntity<Void> register(@RequestBody RegisterUserDTO data) {
         User u = services.register(data);
-        if (u == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        if (u == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ReturnLoginDTO> login(@RequestBody LoginUserDTO data){
+    public ResponseEntity<ReturnLoginDTO> login(@RequestBody LoginUserDTO data) {
         return ResponseEntity.status(HttpStatus.OK).body(services.login(data));
     }
 
     @PutMapping("/{id}/update")
-    public ResponseEntity updateUserRoute(@PathVariable("id") Integer user_id, @RequestBody UpdateUserDTO data){
+    public ResponseEntity<Void> updateUserRoute(@PathVariable("id") Integer user_id, @RequestBody UpdateUserDTO data) {
         services.updateUser(user_id, data);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @DeleteMapping("/{id}/delete")
-    public ResponseEntity deleteUserRoute(@PathVariable("id") Integer user_id){
+    public ResponseEntity<Void> deleteUserRoute(@PathVariable("id") Integer user_id) {
         services.deleteUser(user_id);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @GetMapping("/ratings/{id}")
-    public ResponseEntity<List<ReturnBookShortDTO>> listRatingsForUser(@PathVariable("id") Integer user_id){
+    public ResponseEntity<List<ReturnBookShortDTO>> listRatingsForUser(@PathVariable("id") Integer user_id) {
         return ResponseEntity.ok(ratingBookService.listRatedBooksByUser(user_id));
     }
 
     @GetMapping("/{id}/wishlist")
-    public ResponseEntity<List<WishListDTO>> listOfWishList(@PathVariable("id") Integer user_id){
+    public ResponseEntity<List<WishListDTO>> listOfWishList(@PathVariable("id") Integer user_id) {
         return ResponseEntity.ok(wishListService.listUsersWishes(user_id));
     }
 

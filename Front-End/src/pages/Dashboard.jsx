@@ -1,4 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getDashboardData } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import toast from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
 
 // Componente de Card
 const Card = ({ children, className = '' }) => (
@@ -12,14 +16,14 @@ const HorizontalBar = ({ label, value, maxValue = 5, showValue = true }) => {
   const percentage = (value / maxValue) * 100;
   return (
     <div className="flex items-center gap-3 mb-3">
-      <span className="text-white text-sm w-32 uppercase tracking-wide">{label}</span>
+      <span className="text-white text-sm w-32 uppercase tracking-wide truncate">{label}</span>
       <div className="flex-1 bg-[#1e3a5f] rounded-full h-4 overflow-hidden">
         <div
           className="bg-[#4fc3f7] h-full rounded-full transition-all duration-500"
-          style={{ width: `${percentage}%` }}
+          style={{ width: `${Math.min(percentage, 100)}%` }}
         />
       </div>
-      {showValue && <span className="text-[#4fc3f7] text-sm w-10">({value})</span>}
+      {showValue && <span className="text-[#4fc3f7] text-sm w-10">({Number(value).toFixed(1)})</span>}
     </div>
   );
 };
@@ -59,7 +63,7 @@ const DonutChart = ({ percentage }) => {
         />
       </svg>
       <div className="absolute text-center">
-        <span className="text-4xl font-bold text-[#4fc3f7]">{percentage}%</span>
+        <span className="text-4xl font-bold text-[#4fc3f7]">{Math.round(percentage)}%</span>
       </div>
     </div>
   );
@@ -67,7 +71,7 @@ const DonutChart = ({ percentage }) => {
 
 // Componente de Gráfico de Barras Vertical
 const BarChart = ({ data }) => {
-  const maxValue = Math.max(...data.map(d => d.value));
+  const maxValue = Math.max(...data.map(d => d.value), 1);
 
   return (
     <div className="flex items-end justify-center gap-12 h-48">
@@ -90,13 +94,14 @@ const BarChart = ({ data }) => {
 // Componente de Lista de Autores
 const AuthorList = ({ authors }) => (
   <div className="space-y-2">
+    {authors.length === 0 && <p className="text-gray-500 text-center py-4">Nenhum autor avaliado</p>}
     {authors.map((author, index) => (
       <div key={index} className="flex items-center gap-3">
         <span className="text-white text-sm">{index + 1}.</span>
-        <span className="bg-[#4fc3f7] text-[#0a1628] px-3 py-1 rounded text-sm font-medium flex-1">
-          {author.name}
+        <span className="bg-[#4fc3f7] text-[#0a1628] px-3 py-1 rounded text-sm font-medium flex-1 truncate">
+          {author.name || author.author}
         </span>
-        <span className="text-white text-sm">{author.rating}</span>
+        <span className="text-white text-sm">{(author.rating || author.averageRating || 0).toFixed(1)}</span>
       </div>
     ))}
   </div>
@@ -106,21 +111,13 @@ const AuthorList = ({ authors }) => (
 const WorldMap = ({ countries }) => (
   <div className="relative w-full h-48 flex items-center justify-center">
     <svg viewBox="0 0 800 400" className="w-full h-full opacity-30">
-      {/* Continentes simplificados */}
-      {/* América do Norte */}
       <path d="M50,80 Q100,60 150,70 L180,120 Q160,180 100,200 L60,160 Z" fill="#4fc3f7" />
-      {/* América do Sul */}
       <path d="M120,220 Q160,210 180,250 L170,350 Q130,380 100,340 L90,280 Z" fill="#4fc3f7" />
-      {/* Europa */}
       <path d="M350,60 Q420,50 450,80 L460,130 Q420,150 360,140 L340,100 Z" fill="#4fc3f7" />
-      {/* África */}
       <path d="M360,160 Q420,150 460,180 L470,300 Q420,340 370,320 L350,240 Z" fill="#4fc3f7" />
-      {/* Ásia */}
       <path d="M480,40 Q600,30 700,80 L720,180 Q650,220 520,200 L460,120 Z" fill="#4fc3f7" />
-      {/* Oceania */}
       <path d="M620,280 Q680,260 720,290 L710,340 Q660,360 620,340 Z" fill="#4fc3f7" />
     </svg>
-    {/* Marcadores de países */}
     {countries.map((country, index) => (
       <div
         key={index}
@@ -135,51 +132,75 @@ const WorldMap = ({ countries }) => (
 );
 
 function Dashboard() {
-  // Dados mockados
+  const { user } = useAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      if (!user?.id) return;
+
+      try {
+        setLoading(true);
+        const response = await getDashboardData(user.id);
+        setData(response);
+      } catch (error) {
+        console.error("Erro ao carregar dashboard:", error);
+        toast.error("Não foi possível carregar as estatísticas.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="animate-spin text-[#4fc3f7] mb-4" size={48} />
+        <p className="text-[#4fc3f7] font-medium">Carregando estatísticas...</p>
+      </div>
+    );
+  }
+
+  // Se não carregou nada
+  if (!data) return null;
+
+  // Mapeamento dos dados da API para o formato do Dashboard
   const estatisticasAno = {
-    livrosLidos: 125,
-    meta: 150
+    livrosLidos: data.booksReadThisYear || 0,
+    meta: 50 // Meta fixa ou vinda do perfil (pode ser mock por enquanto)
   };
 
   const interessesPendentes = {
-    livrosNaoLidos: 87,
+    livrosNaoLidos: data.wishlistCount || 0,
     tipo: 'Lista de Desejos'
   };
 
-  const nivelSatisfacao = 85;
+  const nivelSatisfacao = data.satisfactionPercentage || 0;
 
   const comparativoMensal = [
-    { label: 'Mês Passado', value: 18 },
-    { label: 'Este Mês', value: 25 }
+    { label: 'Mês Passado', value: data.booksReadLastMonth || 0 },
+    { label: 'Este Mês', value: data.booksReadThisMonth || 0 }
   ];
 
-  const topAutores = [
-    { name: 'Isaac Asimov', rating: 4.9 },
-    { name: 'Neil Gaiman', rating: 4.9 },
-    { name: 'Neil Gaiman', rating: 4.5 },
-    { name: 'Agatha Christie', rating: 4.5 },
-    { name: 'Jane Austen', rating: 4.5 },
-    { name: 'Gabriel Garcia Marquez', rating: 4.1 }
-  ];
+  // Top 5 Autores vindo do DTO TopAuthorDTO(author, averageRating)
+  const topAutores = (data.topAuthors || []).slice(0, 6);
 
-  const generosMaisLidos = [
-    { label: 'Científica', value: 4.8 },
-    { label: 'Biografia', value: 4.2 },
-    { label: 'Fantasia', value: 4.0 },
-    { label: 'Poesia', value: 3.9 }
-  ];
+  // Top categorias melhor avaliadas
+  const generosBemAvaliados = (data.topRatedCategories || []).map(cat => ({
+    label: cat.category,
+    value: cat.averageRating || 0
+  }));
 
-  const generosBemAvaliados = [
-    { label: 'Ficção Científica', value: 5.0 },
-    { label: 'Fantasia', value: 4.0 },
-    { label: 'Fantasia', value: 4.1 },
-    { label: 'Mistério', value: 4.1 },
-    { label: 'Poesia', value: 3.1 }
-  ];
+  // Generos mais lidos
+  const generosMaisLidos = (data.mostReadCategories || []).map(cat => ({
+    label: cat.category,
+    value: cat.count || 0
+  }));
 
+  // Paises (Ainda não temos essa lógica no back, então mantemos mocks por enquanto)
   const paisesDestaque = [
-    { name: 'Reino Unido', x: '38%', y: '25%' },
-    { name: 'França', x: '42%', y: '35%' },
     { name: 'Brasil', x: '28%', y: '60%' },
     { name: 'EUA', x: '18%', y: '30%' }
   ];

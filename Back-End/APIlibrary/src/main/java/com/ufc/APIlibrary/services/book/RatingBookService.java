@@ -1,7 +1,6 @@
 package com.ufc.APIlibrary.services.book;
 
 import com.ufc.APIlibrary.dto.book.DoRatingBookDTO;
-import com.ufc.APIlibrary.dto.book.ReturnBookLongDTO;
 import com.ufc.APIlibrary.dto.book.ReturnBookShortDTO;
 import com.ufc.APIlibrary.dto.book.ReturnRatingBookDTO;
 

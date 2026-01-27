@@ -32,9 +32,10 @@ public class User implements UserDetails {
     private byte[] profile;
     private UserRoles role;
 
-    public User(String name, String username, String email, String password, String phone_number, byte[] profile,UserRoles role) {
-        this.name = name;
+    public User(String username, String name, String email, String password, String phone_number, byte[] profile,
+            UserRoles role) {
         this.username = username;
+        this.name = name;
         this.email = email;
         this.password = password;
         this.phone_number = phone_number;
@@ -53,7 +54,8 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if(this.role == UserRoles.ADMIN) return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
+        if (this.role == UserRoles.ADMIN)
+            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 }

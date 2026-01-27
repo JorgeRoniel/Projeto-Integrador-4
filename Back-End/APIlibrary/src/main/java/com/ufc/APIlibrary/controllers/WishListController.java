@@ -1,6 +1,5 @@
 package com.ufc.APIlibrary.controllers;
 
-
 import com.ufc.APIlibrary.dto.book.DatasForWishListDTO;
 import com.ufc.APIlibrary.dto.book.NotificationDTO;
 import com.ufc.APIlibrary.services.book.WishListService;
@@ -16,19 +15,19 @@ public class WishListController {
     private WishListService service;
 
     @PostMapping
-    public ResponseEntity addInWishList(@RequestBody DatasForWishListDTO data){
+    public ResponseEntity<Void> addInWishList(@RequestBody DatasForWishListDTO data) {
         service.addBookInWL(data);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/notification")
-    public ResponseEntity updateNotificationRoute(@RequestBody NotificationDTO data){
+    public ResponseEntity<Void> updateNotificationRoute(@RequestBody NotificationDTO data) {
         service.updateNotification(data);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping
-    public ResponseEntity delete(@RequestBody DatasForWishListDTO data){
+    public ResponseEntity<Void> delete(@RequestBody DatasForWishListDTO data) {
         service.removeFromWishList(data);
         return ResponseEntity.ok().build();
     }

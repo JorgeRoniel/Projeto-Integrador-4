@@ -47,26 +47,10 @@ function MeusLivros({ meusLivros, setMeusLivros, atualizarAvaliacaoLivro }) {
 
   // Submeter avaliação (criar ou editar)
   const handleSubmitAvaliacao = (dados) => {
-    // Atualiza a avaliação e comentário do livro
-    setMeusLivros((prevLivros) =>
-      prevLivros.map((livro) =>
-        livro.id === dados.livroId
-          ? { ...livro, avaliacao: dados.rating, comentario: dados.comentario }
-          : livro,
-      ),
-    );
+    // Chama a função global que trata o estado central e a API
+    atualizarAvaliacaoLivro(dados.livroId, dados.rating, dados.comentario);
 
-    const mensagem = modoEdicao
-      ? "Avaliação atualizada com sucesso!"
-      : "Avaliação adicionada com sucesso!";
-
-    toast.success(mensagem, {
-      duration: 3000,
-      position: "bottom-right",
-    });
-
-    // Aqui seria feita a chamada para a API quando integrar com o backend
-    console.log("Avaliação enviada:", dados);
+    fecharModalAvaliacao();
   };
 
   return (
