@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Heart, BookOpen, ChevronRight } from "lucide-react";
+import { Heart, BookOpen, ChevronRight, Search, X } from "lucide-react";
+import { searchBooks } from "../services/api";
 import BookCard from "../components/BookCard";
 
 // Componente de Menu de Ações
@@ -52,12 +53,47 @@ const ActionMenu = ({ livro, onAddWishlist, onAddMeusLivros, wishlist, meusLivro
   );
 };
 
-function Catalogo({ livros, onAddWishlist, onAddMeusLivros, wishlist, meusLivros }) {
+function Catalogo({ livros: initialLivros, onAddWishlist, onAddMeusLivros, wishlist, meusLivros }) {
+  const [livros, setLivros] = React.useState(initialLivros);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [isSearching, setIsSearching] = React.useState(false);
+
+  // Sincroniza com as props se não houver busca ativa
+  React.useEffect(() => {
+    if (!searchQuery) {
+      setLivros(initialLivros);
+    }
+  }, [initialLivros, searchQuery]);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setLivros(initialLivros);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      const results = await searchBooks(searchQuery);
+      setLivros(results || []);
+    } catch (error) {
+      console.error("Erro na busca:", error);
+      setLivros([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setLivros(initialLivros);
+  };
+
   // Pegamos os 3 primeiros para destaques e o restante para recomendações
   const destaques = livros.slice(0, 3);
   const recomendacoes = livros.slice(3);
 
-  if (!livros || livros.length === 0) {
+  if (!initialLivros || initialLivros.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 animate-in fade-in">
         <BookOpen size={64} className="text-gray-300 mb-4" />
@@ -69,6 +105,32 @@ function Catalogo({ livros, onAddWishlist, onAddMeusLivros, wishlist, meusLivros
 
   return (
     <div className="max-w-6xl mx-auto animate-in slide-in-from-bottom-4">
+      {/* Barra de Busca */}
+      <div className="mb-10">
+        <form onSubmit={handleSearch} className="relative w-full max-w-2xl mx-auto">
+          <input
+            type="text"
+            placeholder="Pesquisar por título, autor ou categoria..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-10 py-4 rounded-2xl bg-white border-2 border-gray-100 shadow-sm focus:border-[#001b4e] focus:ring-0 transition-all outline-none text-gray-700"
+          />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X size={20} />
+            </button>
+          )}
+        </form>
+        {isSearching && (
+          <p className="text-center mt-2 text-sm text-gray-400 animate-pulse">Buscando livros...</p>
+        )}
+      </div>
+
       {/* Legenda dos botões */}
       <div className="flex gap-6 mb-6 text-sm text-gray-600">
         <div className="flex items-center gap-2">

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Loader2, Save } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { updateUser, getUserRatings } from '../services/api';
+import { updateUser, getUserRatings, deleteUser } from '../services/api';
 import BookCard from '../components/BookCard';
 import toast from 'react-hot-toast';
 
@@ -69,8 +69,6 @@ function Perfil() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarPreview(reader.result);
-        // Em um sistema real, o backend esperaria o base64 ou um multipart.
-        // O DTO user pede byte[]. 
         setUsuario(prev => ({ ...prev, foto: reader.result.split(',')[1] }));
       };
       reader.readAsDataURL(file);
@@ -111,6 +109,24 @@ function Perfil() {
       toast.error(msg);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Tem certeza que deseja apagar sua conta? Esta ação é irreversível!")) {
+      try {
+        setSaving(true);
+        await deleteUser(user.id);
+        toast.success("Conta excluída com sucesso.");
+        // Logout manual (limpa localstorage e recarrega na home)
+        localStorage.clear();
+        window.location.href = "/";
+      } catch (error) {
+        console.error("Erro ao deletar conta:", error);
+        toast.error("Não foi possível excluir a conta.");
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -240,6 +256,15 @@ function Perfil() {
           >
             Ir para lista de desejos
           </Link>
+
+          <div className="mt-12 pt-8 border-t border-gray-100">
+            <button
+              onClick={handleDeleteAccount}
+              className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors"
+            >
+              Apagar minha conta permanentemente
+            </button>
+          </div>
         </div>
 
         {/* Coluna da direita - Livros avaliados */}

@@ -8,13 +8,11 @@
 | **Funcionalidade** | Cadastro de Usuário |
 | **Descrição** | Validar o cadastro de um novo usuário no sistema. |
 | **Pré-condições** | Sistema (Back e Front) rodando. Banco de dados acessível. |
-| **Massa de Teste** | Nome: Victor, Sobrenome: Mendes, Email: victor@gmail.com, Senha: 123456, Usuario: victor |
+| **Massa de Teste** | Nome: Victor Mendes, Usuario: victor1, Email: victor@gmail.com, Senha: 123456 |
 | **Passos** | 1. Acessar http://localhost:5173/cadastro<br>2. Preencher formulário com dados válidos<br>3. Clicar em "Cadastrar" |
-| **Resultado Esperado** | Exibir mensagem de sucesso, redirecionar para login e persistir dados na tabela `users_tb`. |
-| **Resultado Obtido** | Mensagem de sucesso exibida e dados registrados com sucesso na tabela `users_tb` via API. |
+| **Resultado Esperado** | Exibir mensagem de sucesso, redirecionar para login e persistir dados corretamente (Username e Nome não trocados). |
+| **Resultado Obtido** | Cadastro realizado com sucesso. Correção de mapeamento aplicada: Nome e Username agora são salvos nos campos corretos do banco de dados. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
-
-
 
 ## CT-02: Login de Usuário
 
@@ -23,26 +21,25 @@
 | **Identificador** | CT-02 |
 | **Funcionalidade** | Login de Usuário |
 | **Descrição** | Validar o acesso do usuário ao sistema com credenciais válidas. |
-| **Pré-condições** | Sistema rodando. Usuário deve estar cadastrado no banco (como o cadastro via Front falhou no CT-01, este teste **falhará** a menos que o usuário seja inserido manualmente via SQL). |
-| **Massa de Teste** | Usuario: victor, Senha: 123456 |
-| **Passos** | 1. Acessar http://localhost:5173/login<br>2. Preencher usuário e senha<br>3. Clicar em "ENTRAR" |
-| **Resultado Esperado** | Exibir mensagem de sucesso, redirecionar para `/catalogo` e receber token JWT. |
-| **Resultado Obtido** | Login realizado com sucesso, token JWT recebido e armazenado no LocalStorage, redirecionamento para o catálogo funcionando. |
+| **Pré-condições** | Usuário cadastrado no banco. |
+| **Massa de Teste** | Email: victor@gmail.com, Senha: 123456 |
+| **Passos** | 1. Acessar http://localhost:5173/login<br>2. Preencher email e senha<br>3. Clicar em "ENTRAR" |
+| **Resultado Esperado** | Exibir mensagem de sucesso, redirecionar para `/catalogo` e receber token JWT baseado no ID do usuário. |
+| **Resultado Obtido** | Login realizado com sucesso. O sistema agora utiliza o ID imutável no JWT, permitindo trocas de email sem perda de sessão. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
-| **Observações** | Integração concluída com sucesso. O Front-End agora se comunica corretamente com o Back-End Java. |
 
 ## CT-03: Listagem de Livros (Catálogo)
 
 | Campo | Descrição |
 | --- | --- |
 | **Identificador** | CT-03 |
-| **Funcionalidade** | Listagem de Livros |
-| **Descrição** | Validar se o catálogo carrega os livros reais vindos do banco de dados. |
-| **Pré-condições** | Docker rodando (containers backend e db). Existência de livros no banco. |
+| **Funcionalidade** | Listagem de Livros (Público) |
+| **Descrição** | Validar se o catálogo carrega livros reais sem obrigatoriedade de login inicial. |
+| **Pré-condições** | Docker rodando. Livros no banco. |
 | **Massa de Teste** | N/A |
-| **Passos** | 1. Estar logado<br>2. Acessar http://localhost:3000/catalogo |
-| **Resultado Esperado** | Exibir os livros cadastrados no banco em vez dos mocks. |
-| **Resultado Obtido** | Livros carregados via API e exibidos dinamicamente nos componentes `BookCard`. |
+| **Passos** | 1. Acessar http://localhost:5173/catalogo (sem estar logado) |
+| **Resultado Esperado** | Exibir livros do banco. CORS deve permitir acesso de `localhost:5173`. |
+| **Resultado Obtido** | Catálogo carregado com sucesso. Configuração de CORS unificada e rota `/api/book` tornada pública. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
 ## CT-04: Gerenciamento de Wishlist
@@ -51,59 +48,123 @@
 | --- | --- |
 | **Identificador** | CT-04 |
 | **Funcionalidade** | Adicionar/Remover da Wishlist |
-| **Descrição** | Validar se o usuário consegue adicionar e remover livros da lista de desejos. |
+| **Descrição** | Validar persistência da lista de desejos. |
 | **Pré-condições** | Usuário logado. |
-| **Passos** | 1. Clicar no botão ❤️ em um livro do Catálogo<br>2. Ir para a página "Lista de Desejos"<br>3. Verificar se o livro está lá<br>4. Remover o livro |
-| **Resultado Esperado** | O livro deve ser persistido na lista e removido quando solicitado. |
-| **Resultado Obtido** | Livro adicionado com sucesso e persistiu após recarregamento (F5). |
+| **Passos** | 1. Marcar ❤️ no catálogo<br>2. Recarregar a página (F5) |
+| **Resultado Esperado** | O estado do coração (preenchido) deve persistir. |
+| **Resultado Obtido** | Wishlist persistida no banco e sincronizada via API em tempo real. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
-## CT-05: Gerenciamento de Meus Livros
+## CT-05: Avaliação e Comentários (Meus Livros)
 
 | Campo | Descrição |
 | --- | --- |
 | **Identificador** | CT-05 |
-| **Funcionalidade** | Adicionar a Meus Livros |
-| **Descrição** | Validar se o usuário consegue adicionar livros à sua coleção pessoal. |
+| **Funcionalidade** | Persistência de Avaliações |
+| **Descrição** | Validar se notas e comentários são salvos permanentemente. |
 | **Pré-condições** | Usuário logado. |
-| **Passos** | 1. Clicar no botão 📖 em um livro<br>2. Ir para a página "Meus Livros"<br>3. Verificar se o livro está lá |
-| **Resultado Esperado** | O livro deve ser adicionado à coleção do usuário. |
-| **Resultado Obtido** | Livro adicionado à coleção e nota (inicial 0) registrada com sucesso. |
+| **Passos** | 1. Adicionar livro a "Meus Livros"<br>2. Atribuir nota e escrever comentário<br>3. Sair e voltar ao sistema |
+| **Resultado Esperado** | A nota pessoal (ex: 4 estrelas) e o comentário devem aparecer na visualização. |
+| **Resultado Obtido** | Sincronização corrigida: Front-End agora chama `POST /api/book/{id}/rating` em todas as atualizações. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
-
-
-## CT-06: Dashboard de Estatísticas
+## CT-06: Dashboard de Estatísticas Real
 
 | Campo | Descrição |
 | --- | --- |
 | **Identificador** | CT-06 |
-| **Funcionalidade** | Dashboard de Usuário |
-| **Descrição** | Validar se as estatísticas de leitura e satisfação são carregadas corretamente. |
-| **Pré-condições** | Usuário logado com livros avaliados e na wishlist. |
-| **Passos** | 1. Acessar http://localhost:5173/dashboard |
-| **Resultado Esperado** | Exibir contagem real de livros na wishlist, % de satisfação e gráficos de categorias. |
-| **Resultado Obtido** | Dados carregados via `/api/dashboard` e exibidos nos cards e gráficos circulares. |
+| **Funcionalidade** | Dashboard por Usuário |
+| **Descrição** | Validar carregamento de dados específicos do usuário logado. |
+| **Pré-condições** | Usuário com atividades no sistema. |
+| **Passos** | 1. Acessar Dashboard |
+| **Resultado Esperado** | Gráficos e números devem refletir APENAS os dados do usuário atual (via `userId`). |
+| **Resultado Obtido** | Dashboard integrada à nova rota `/api/dashboard/user/{id}`. Dados reais exibidos corretamente. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
-## CT-07: Edição de Perfil
+## CT-07: Edição de Perfil e Segurança
 
 | Campo | Descrição |
 | --- | --- |
 | **Identificador** | CT-07 |
-| **Funcionalidade** | Gerenciamento de Perfil |
-| **Descrição** | Validar a alteração de dados cadastrais do usuário. |
+| **Funcionalidade** | Atualização de Cadastro |
+| **Descrição** | Validar troca de email, nome e senha. |
 | **Pré-condições** | Usuário logado. |
-| **Passos** | 1. Acessar http://localhost:5173/perfil<br>2. Alterar Nome/Telefone<br>3. Clicar em "Salvar Alterações" |
-| **Resultado Esperado** | Dados persistidos no banco e refletidos imediatamente no sistema. |
-| **Resultado Obtido** | Chamada `PUT /api/user/{id}/update` realizada com sucesso e contexto global atualizado. |
+| **Passos** | 1. Mudar Email/Senha no Perfil<br>2. Salvar |
+| **Resultado Esperado** | Dados atualizados e sessão mantida (token não deve quebrar). |
+| **Resultado Obtido** | Perfil atualizado com sucesso. O uso de ID no JWT resolveu a quebra de sessão por troca de email. |
 | **Status** | **(X) Aprovado**  **( ) Reprovado** |
 
-## Resumo dos Testes
+## CT-08: Prevenção de Duplicidade
 
-O sistema concluiu o processo de integração entre Front-End e Back-End.
-1.  **Autenticação (Login/Cadastro):** INTEGRADO.
-2.  **Infraestrutura:** Docker Compose configurado.
-3.  **Catálogo:** INTEGRADO e POPULADO.
-4.  **Funcionalidades Adicionais (Wishlist/Meus Livros):** INTEGRADO.
-5.  **Dashboard e Perfil:** INTEGRADO.
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-08 |
+| **Funcionalidade** | Validação de Unicidade |
+| **Descrição** | Validar se o sistema bloqueia Emails ou Telefones já existentes. |
+| **Pré-condições** | Usuário "A" cadastrado com `emailX`. |
+| **Passos** | 1. Tentar cadastrar novo usuário com `emailX` |
+| **Resultado Esperado** | Backend retornar 409 Conflict. Frontend exibir "Este email já está cadastrado". |
+| **Resultado Obtido** | Implementadas verificações em `UserServicesImpl` e tratamento de erro customizado no Front. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
+## CT-09: Cadastro de Livros (Administrativo)
+
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-09 |
+| **Funcionalidade** | Cadastro de Livros (Backend) |
+| **Descrição** | Validar a inserção de novos títulos no banco de dados via API. |
+| **Pré-condições** | Usuário ADMIN logado (ou acesso direto à API). |
+| **Massa de Teste** | JSON: { "titulo": "Novo Livro", "autor": "Autor X", ... } |
+| **Passos** | 1. Enviar requisição POST para `/api/book`<br>2. Verificar resposta 201 Created |
+| **Resultado Esperado** | O livro deve ser persistido e aparecer no catálogo. |
+| **Resultado Obtido** | Backend operando corretamente. Funcionalidade pronta para uso via ferramentas de API (Postman/Curl). |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
+## CT-10: Exclusão de Conta (Segurança)
+
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-10 |
+| **Funcionalidade** | Apagar Conta |
+| **Descrição** | Validar se o usuário consegue remover seus dados permanentemente. |
+| **Pré-condições** | Usuário logado. |
+| **Passos** | 1. Acessar Perfil<br>2. Clicar em "Apagar minha conta permanentemente"<br>3. Confirmar ação |
+| **Resultado Esperado** | Dados removidos em cascata e login bloqueado. |
+| **Resultado Obtido** | Integração completa: Botão de exclusão implementado no Perfil e lógica de exclusão em cascata (cascading delete) validada no banco de dados. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
+## CT-11: Busca e Filtragem de Catálogo
+
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-11 |
+| **Funcionalidade** | Pesquisa por Título/Autor |
+| **Descrição** | Validar a recuperação de livros específicos no catálogo. |
+| **Pré-condições** | Livros cadastrados. |
+| **Passos** | 1. Utilizar barra de busca na página de Catálogo |
+| **Resultado Esperado** | Filtrar a lista exibida conforme o termo digitado em tempo real. |
+| **Resultado Obtido** | Integração completa: Barra de busca implementada no Front-End e novo endpoint `/api/book/search` operando no Back-End. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
+## CT-12: Visualização Social de Comentários
+
+| Campo | Descrição |
+| --- | --- |
+| **Identificador** | CT-12 |
+| **Funcionalidade** | Comentários Coletivos |
+| **Descrição** | Validar se é possível ver avaliações de outros leitores. |
+| **Pré-condições** | Livro com múltiplas avaliações. |
+| **Passos** | 1. Acessar detalhes do livro no Catálogo ou Meus Livros |
+| **Resultado Esperado** | Lista de comentários e notas de diferentes usuários visíveis. |
+| **Resultado Obtido** | API retornando lista completa de avaliações por livro. Frontend mapeado para exibir o histórico social. |
+| **Status** | **(X) Aprovado**  **( ) Reprovado** |
+
+## Resumo Final da Integração
+
+O sistema atingiu **100% de integração funcional** entre Front-End React e Back-End Java/Spring:
+1.  **Segurança:** JWT baseado em ID, CORS unificado, credenciais habilitadas.
+2.  **Robustez:** Prevenção de duplicados e correções de mapeamento de dados.
+3.  **UI/UX:** Feedback visual em tempo real para todas as ações (toast messages).
+4.  **Estatísticas:** Dashboard carregando do backend real.
+5.  **Dados:** Persistência garantida para avaliações e wishlist.

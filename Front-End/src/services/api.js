@@ -17,7 +17,6 @@ async function fetchAPI(endpoint, options = {}) {
 
   const config = {
     ...options,
-    credentials: "include",
     headers: {
       ...defaultHeaders,
       ...options.headers,
@@ -143,6 +142,17 @@ export async function listBooks(page = 0, size = 12) {
  */
 export async function getBook(bookId) {
   return fetchAPI(`/api/book/${bookId}`, {
+    method: "GET",
+  });
+}
+
+/**
+ * Pesquisa livros por título, autor ou categoria
+ * @param {string} query - Termo de busca
+ * @returns {Promise<Array>}
+ */
+export async function searchBooks(query) {
+  return fetchAPI(`/api/book/search?query=${encodeURIComponent(query)}`, {
     method: "GET",
   });
 }

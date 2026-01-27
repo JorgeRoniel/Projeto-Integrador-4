@@ -77,4 +77,22 @@ public class BookServiceImpl implements BookService {
         }
         repository.deleteById(id);
     }
+
+    @Override
+    public java.util.List<ReturnBookShortDTO> searchBooks(String query) {
+        java.util.Set<Book> results = new java.util.HashSet<>();
+        results.addAll(repository.findByTitleContainingIgnoreCase(query));
+        results.addAll(repository.findByAuthorContainingIgnoreCase(query));
+        results.addAll(repository.findByCategoryContainingIgnoreCase(query));
+
+        return results.stream().map(book -> new ReturnBookShortDTO(
+                book.getId(),
+                book.getTitle(),
+                book.getAuthor(),
+                book.getPreview_picture(),
+                book.getRating_avg(),
+                book.getCategory(),
+                null,
+                null)).toList();
+    }
 }

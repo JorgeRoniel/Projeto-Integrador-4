@@ -11,7 +11,12 @@ import org.springframework.data.domain.Pageable;
 public interface BookService {
 
     Page<ReturnBookShortDTO> listToHome(Pageable pageable);
+
     ReturnBookLongDTO findBook(Integer id);
+
     Book registerBook(BookRegisterDTO data);
+
     void deleteBook(Integer id);
+
+    java.util.List<ReturnBookShortDTO> searchBooks(String query);
 }
