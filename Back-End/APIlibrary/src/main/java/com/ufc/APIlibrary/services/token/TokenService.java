@@ -16,21 +16,21 @@ public class TokenService {
 
     private String secret = "T3ST3";
 
-    public String generateToken(User user){
+    public String generateToken(User user) {
         try {
             Algorithm alg = Algorithm.HMAC256(secret);
             String token = JWT.create()
                     .withIssuer("library_app")
-                    .withSubject(user.getEmail())
+                    .withSubject(String.valueOf(user.getId()))
                     .withExpiresAt(generateExpirationDate())
                     .sign(alg);
             return token;
-        } catch (JWTCreationException e){
+        } catch (JWTCreationException e) {
             throw new RuntimeException("Erro: " + e);
         }
     }
 
-    public String validateToken(String token){
+    public String validateToken(String token) {
         try {
             Algorithm alg = Algorithm.HMAC256(secret);
             return JWT.require(alg)
@@ -43,7 +43,7 @@ public class TokenService {
         }
     }
 
-    private Instant generateExpirationDate(){
+    private Instant generateExpirationDate() {
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
 }

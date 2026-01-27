@@ -28,14 +28,22 @@ public class SecurityFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         var token = recoveryToken(request);
         if (token != null) {
-            var email = tokenService.validateToken(token);
-            UserDetails user = repository.findByEmail(email);
+            var subject = tokenService.validateToken(token);
+            try {
+                Integer userId = Integer.parseInt(subject);
+                UserDetails user = repository.findById(userId).orElse(null);
 
-            if (user != null) {
-                var authorization = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authorization);
-            } else {
-                System.out.println("ERROR");
+                if (user != null) {
+                    var authorization = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authorization);
+                }
+            } catch (NumberFormatException e) {
+                // Legado: tenta por email se não for número (opcional, mas bom pra transição)
+                UserDetails user = repository.findByEmail(subject);
+                if (user != null) {
+                    var authorization = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authorization);
+                }
             }
         }
         filterChain.doFilter(request, response);
