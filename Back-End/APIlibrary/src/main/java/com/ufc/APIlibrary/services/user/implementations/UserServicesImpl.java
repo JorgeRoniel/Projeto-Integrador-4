@@ -43,7 +43,8 @@ public class UserServicesImpl implements UserServices {
     @Override
     public User register(RegisterUserDTO data) throws RegisterErrorException {
         String pass = encoder.encode(data.senha());
-        User u = new User(data.nome(), data.username(), data.email(), pass, data.telefone(), data.role());
+        // Constructor expectations: username, name, email, password, phone, role
+        User u = new User(data.username(), data.nome(), data.email(), pass, data.telefone(), data.role());
         return repository.save(u);
     }
 
