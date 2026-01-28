@@ -8,6 +8,7 @@ import ListaDesejo from "./pages/ListaDesejo";
 import MeusLivros from "./pages/MeusLivros";
 import Dashboard from "./pages/Dashboard";
 import Perfil from "./pages/Perfil";
+import Admin from "./pages/Admin";
 
 function AppRoutes({
   wishlist,
@@ -73,6 +74,7 @@ function AppRoutes({
         }
       />
       <Route path="/perfil" element={<Perfil />} />
+      <Route path="/admin" element={<Admin />} />
 
       <Route path="/" element={<Navigate to="/login" replace />} />
 
