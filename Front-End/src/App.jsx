@@ -8,7 +8,14 @@ import logoClara from "./assets/logo-roxa.png";
 
 import Sidebar from "./components/Sidebar";
 import AppRoutes from "./routes";
-import { listBooks, addToWishlist, removeFromWishlist, getUserWishlist, rateBook, getUserRatings } from "./services/api";
+import {
+  listBooks,
+  addToWishlist,
+  removeFromWishlist,
+  getUserWishlist,
+  rateBook,
+  getUserRatings,
+} from "./services/api";
 import { useAuth } from "./contexts/AuthContext";
 
 function App() {
@@ -34,7 +41,9 @@ function App() {
         setLivros(data.content || data || []);
       } catch (error) {
         console.error("Erro ao carregar livros:", error);
-        toast.error("Não foi possível carregar o catálogo de livros.", { id: 'error-catalog' });
+        toast.error("Não foi possível carregar o catálogo de livros.", {
+          id: "error-catalog",
+        });
       } finally {
         setIsLoadingBooks(false);
       }
@@ -66,10 +75,13 @@ function App() {
       if (user?.id) {
         try {
           const data = await getUserRatings(Number(user.id));
-          const formatted = (data || []).map(book => ({
+          const formatted = (data || []).map((book) => ({
             ...book,
             // Prioridade para 'nota' que agora vem no ReturnBookShortDTO
-            avaliacao: book.nota !== undefined && book.nota !== null ? Number(book.nota) : (book.rating || book.media || 0)
+            avaliacao:
+              book.nota !== undefined && book.nota !== null
+                ? Number(book.nota)
+                : book.rating || book.media || 0,
           }));
           setMeusLivros(formatted);
         } catch (error) {
@@ -101,13 +113,13 @@ function App() {
     if (!wishlist.find((item) => Number(item.id) === bookId)) {
       try {
         await addToWishlist(userId, bookId);
-        setWishlist(prev => [...prev, livro]);
+        setWishlist((prev) => [...prev, livro]);
         toast.success(`"${livro.titulo}" adicionado à lista de desejos!`);
       } catch (error) {
         // Se já existe (409), atualizamos o estado local para refletir isso
-        if (error.status === 409 || String(error.message).includes('409')) {
-          setWishlist(prev => {
-            if (!prev.find(item => Number(item.id) === bookId)) {
+        if (error.status === 409 || String(error.message).includes("409")) {
+          setWishlist((prev) => {
+            if (!prev.find((item) => Number(item.id) === bookId)) {
               return [...prev, livro];
             }
             return prev;
@@ -128,7 +140,9 @@ function App() {
     if (!user) return;
     try {
       await removeFromWishlist(Number(user.id), Number(id));
-      setWishlist(prev => prev.filter((livro) => Number(livro.id) !== Number(id)));
+      setWishlist((prev) =>
+        prev.filter((livro) => Number(livro.id) !== Number(id)),
+      );
       toast.success("Removido da lista de desejos.");
     } catch (error) {
       console.error("Erro ao remover da wishlist:", error);
@@ -147,9 +161,9 @@ function App() {
     const userId = Number(user.id);
     if (!meusLivros.find((item) => Number(item.id) === bookId)) {
       try {
-        await rateBook(bookId, userId, 0);
+        await rateBook(bookId, userId, -1);
         const livroComAvaliacao = { ...livro, id: bookId, avaliacao: 0 };
-        setMeusLivros(prev => [...prev, livroComAvaliacao]);
+        setMeusLivros((prev) => [...prev, livroComAvaliacao]);
         toast.success(`"${livro.titulo}" adicionado a Meus Livros!`);
       } catch (error) {
         console.error("Erro ao adicionar:", error);
@@ -166,12 +180,14 @@ function App() {
     const userId = Number(user.id);
     if (!meusLivros.find((item) => Number(item.id) === bookId)) {
       try {
-        await rateBook(bookId, userId, 0);
+        await rateBook(bookId, userId, -1);
         await removeFromWishlist(userId, bookId);
 
         const livroComAvaliacao = { ...livro, id: bookId, avaliacao: 0 };
-        setMeusLivros(prev => [...prev, livroComAvaliacao]);
-        setWishlist(prev => prev.filter((item) => Number(item.id) !== bookId));
+        setMeusLivros((prev) => [...prev, livroComAvaliacao]);
+        setWishlist((prev) =>
+          prev.filter((item) => Number(item.id) !== bookId),
+        );
 
         toast.success(`"${livro.titulo}" movido para Meus Livros!`);
       } catch (error) {
@@ -184,7 +200,11 @@ function App() {
   };
 
   // Função para atualizar avaliação de um livro em "Meus Livros"
-  const atualizarAvaliacaoLivro = async (livroId, avaliacao, comentario = "") => {
+  const atualizarAvaliacaoLivro = async (
+    livroId,
+    avaliacao,
+    comentario = "",
+  ) => {
     if (!user) return;
     const bId = Number(livroId);
     const uId = Number(user.id);
@@ -192,7 +212,9 @@ function App() {
       await rateBook(bId, uId, Number(avaliacao), String(comentario));
       setMeusLivros((prevLivros) =>
         prevLivros.map((livro) =>
-          Number(livro.id) === bId ? { ...livro, id: bId, avaliacao, comentario } : livro,
+          Number(livro.id) === bId
+            ? { ...livro, id: bId, avaliacao, comentario }
+            : livro,
         ),
       );
       toast.success("Avaliação salva com sucesso!");
