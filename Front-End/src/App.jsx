@@ -208,7 +208,7 @@ function App() {
     "/meus-livros",
     "/lista-desejo",
     "/perfil",
-  ].includes(location.pathname);
+  ].includes(location.pathname) || location.pathname.startsWith("/livro/");
 
   return (
     <div className="min-h-screen w-full bg-white font-sans flex overflow-hidden">
@@ -221,17 +221,7 @@ function App() {
 
           <main className="flex-1 h-screen overflow-y-auto p-10 bg-white">
             {/* A barra de busca no topo da página */}
-            <div className="max-w-5xl mx-auto relative mb-12">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                size={20}
-              />
-              <input
-                type="text"
-                placeholder="Pesquise o livro"
-                className="w-full border-2 border-gray-200 rounded-full py-2 px-12 outline-none focus:border-[#001b4e]"
-              />
-            </div>
+            {/* A barra de busca foi removida daqui pois já existe no Catálogo */}
 
             <AppRoutes
               wishlist={wishlist}

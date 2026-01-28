@@ -107,29 +107,7 @@ const AuthorList = ({ authors }) => (
   </div>
 );
 
-// Componente de Mapa Mundi Simplificado
-const WorldMap = ({ countries }) => (
-  <div className="relative w-full h-48 flex items-center justify-center">
-    <svg viewBox="0 0 800 400" className="w-full h-full opacity-30">
-      <path d="M50,80 Q100,60 150,70 L180,120 Q160,180 100,200 L60,160 Z" fill="#4fc3f7" />
-      <path d="M120,220 Q160,210 180,250 L170,350 Q130,380 100,340 L90,280 Z" fill="#4fc3f7" />
-      <path d="M350,60 Q420,50 450,80 L460,130 Q420,150 360,140 L340,100 Z" fill="#4fc3f7" />
-      <path d="M360,160 Q420,150 460,180 L470,300 Q420,340 370,320 L350,240 Z" fill="#4fc3f7" />
-      <path d="M480,40 Q600,30 700,80 L720,180 Q650,220 520,200 L460,120 Z" fill="#4fc3f7" />
-      <path d="M620,280 Q680,260 720,290 L710,340 Q660,360 620,340 Z" fill="#4fc3f7" />
-    </svg>
-    {countries.map((country, index) => (
-      <div
-        key={index}
-        className="absolute flex flex-col items-center"
-        style={{ left: country.x, top: country.y }}
-      >
-        <div className="w-3 h-3 bg-[#4fc3f7] rounded-full animate-pulse" />
-        <span className="text-white text-xs mt-1 whitespace-nowrap">{country.name}</span>
-      </div>
-    ))}
-  </div>
-);
+
 
 function Dashboard() {
   const { user } = useAuth();
@@ -199,11 +177,7 @@ function Dashboard() {
     value: cat.count || 0
   }));
 
-  // Paises (Ainda não temos essa lógica no back, então mantemos mocks por enquanto)
-  const paisesDestaque = [
-    { name: 'Brasil', x: '28%', y: '60%' },
-    { name: 'EUA', x: '18%', y: '30%' }
-  ];
+
 
   return (
     <div className="min-h-screen bg-[#0d1b2a] p-6 -m-10 animate-in fade-in">
@@ -283,18 +257,9 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* Linha 3: Mapa e mais gêneros */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Países de Origem */}
-          <Card className="md:col-span-1">
-            <h3 className="text-white text-center text-sm font-semibold uppercase tracking-wider mb-4">
-              Países de Origem (Maior Interesse)
-            </h3>
-            <WorldMap countries={paisesDestaque} />
-          </Card>
-
-          {/* Gêneros Mais Bem Avaliados */}
-          <Card className="md:col-span-1">
+        {/* Linha 3: Gêneros Mais Bem Avaliados (Full Width) */}
+        <div className="grid grid-cols-1 gap-6">
+          <Card>
             <h3 className="text-white text-center text-sm font-semibold uppercase tracking-wider mb-4">
               Gêneros Mais Bem Avaliados
             </h3>
@@ -306,20 +271,7 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* Paginação */}
-        <div className="flex justify-center items-center mt-6 gap-4">
-          <button className="text-white hover:text-[#4fc3f7] transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <span className="text-white text-sm">9 / 11</span>
-          <button className="text-white hover:text-[#4fc3f7] transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+
       </div>
     </div>
   );

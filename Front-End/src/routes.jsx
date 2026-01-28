@@ -9,6 +9,7 @@ import MeusLivros from "./pages/MeusLivros";
 import Dashboard from "./pages/Dashboard";
 import Perfil from "./pages/Perfil";
 import Admin from "./pages/Admin";
+import DetalhesLivro from "./pages/DetalhesLivro";
 
 function AppRoutes({
   wishlist,
@@ -49,6 +50,16 @@ function AppRoutes({
             onAddMeusLivros={adicionarAMeusLivros}
             wishlist={wishlist}
             meusLivros={meusLivros}
+          />
+        }
+      />
+      <Route
+        path="/livro/:id"
+        element={
+          <DetalhesLivro
+            livros={livros}
+            onAddWishlist={adicionarAListaDesejo}
+            onAddMeusLivros={adicionarAMeusLivros}
           />
         }
       />
