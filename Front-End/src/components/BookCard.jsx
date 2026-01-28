@@ -8,7 +8,8 @@ function BookCard({
     showTitle = false,
     showAuthor = false,
     actionButton = null,
-    onAction = null
+    onAction = null,
+    rating = null
 }) {
 
     const heightClass = size === 'large' ? 'h-80' : 'h-64';
@@ -47,7 +48,7 @@ function BookCard({
             {/* Avaliação */}
             {showRating && (
                 <div className="flex justify-center">
-                    <StarRating rating={livro.media || livro.avaliacao} />
+                    <StarRating rating={rating ?? livro.media ?? livro.avaliacao} />
                 </div>
             )}
 

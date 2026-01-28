@@ -60,6 +60,7 @@ function AppRoutes({
             livros={livros}
             onAddWishlist={adicionarAListaDesejo}
             onAddMeusLivros={adicionarAMeusLivros}
+            meusLivros={meusLivros}
           />
         }
       />
