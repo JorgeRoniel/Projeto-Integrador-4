@@ -2,7 +2,7 @@ CREATE TABLE book_ratings (
     user_id INT NOT NULL,
     book_id INT NOT NULL,
 
-    rating INT CHECK (rating BETWEEN 0 AND 5),
+    rating INT CHECK (rating = -1 OR rating BETWEEN 0 AND 5),
     review VARCHAR(255),
     date_review DATE,
 

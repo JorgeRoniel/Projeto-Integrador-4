@@ -18,9 +18,23 @@ public interface BookRatingRepository extends JpaRepository<BookRating, Integer>
     BookRating findByUserIdAndBookId(Integer userId, Integer bookId);
 
     @Query("""
+            SELECT COUNT(r)
+            FROM BookRating r
+            WHERE r.book.id = :bookId AND r.rating <> -1
+        """)
+    Integer countValidRatings(@Param("bookId") Integer bookId);
+
+    @Query("""
+            SELECT COALESCE(SUM(r.rating), 0)
+            FROM BookRating r
+            WHERE r.book.id = :bookId AND r.rating <> -1
+        """)
+    Integer sumValidRatings(@Param("bookId") Integer bookId);
+
+    @Query("""
                 SELECT AVG(r.rating)
                 FROM BookRating r
-                WHERE r.user.id = :userId
+                WHERE r.user.id = :userId AND r.rating <> -1
             """)
     Double findAverageRatingByUser(@Param("userId") Integer userId);
 
@@ -40,7 +54,7 @@ public interface BookRatingRepository extends JpaRepository<BookRating, Integer>
     @Query("""
                 SELECT r.book.author, AVG(r.rating)
                 FROM BookRating r
-                WHERE r.user.id = :userId
+                WHERE r.user.id = :userId AND r.rating <> -1
                 GROUP BY r.book.author
                 ORDER BY AVG(r.rating) DESC
             """)
@@ -51,7 +65,7 @@ public interface BookRatingRepository extends JpaRepository<BookRating, Integer>
                 SELECT c, AVG(r.rating)
                 FROM BookRating r
                 JOIN r.book.category c
-                WHERE r.user.id = :userId
+                WHERE r.user.id = :userId AND r.rating <> -1
                 GROUP BY c
                 ORDER BY AVG(r.rating) DESC
             """)
