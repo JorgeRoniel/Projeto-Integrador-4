@@ -99,13 +99,13 @@ def rate_book(token, book_id, user_id, nota, comentario):
 # --- DATA ---
 
 admins = [
-    {"username": "admin", "nome": "Administrador", "email": "admin@email.com", "senha": "admin", "telefone": "999999999", "role": "ADMIN"}
+    {"username": "admin", "nome": "Administrador", "email": "admin@email.com", "senha": "admin123", "telefone": "999999999", "role": "ADMIN"}
 ]
 
 users = [
-    {"username": "leitor1", "nome": "Alice Leitora", "email": "alice@email.com", "senha": "123", "telefone": "888888888", "role": "USER"},
-    {"username": "leitor2", "nome": "Bob Leitor", "email": "bob@email.com", "senha": "123", "telefone": "777777777", "role": "USER"},
-    {"username": "critico", "nome": "Carlos Crítico", "email": "carlos@email.com", "senha": "123", "telefone": "666666666", "role": "USER"},
+    {"username": "leitor1", "nome": "Alice Leitora", "email": "alice@email.com", "senha": "password123", "telefone": "888888888", "role": "USER"},
+    {"username": "leitor2", "nome": "Bob Leitor", "email": "bob@email.com", "senha": "password123", "telefone": "777777777", "role": "USER"},
+    {"username": "critico", "nome": "Carlos Crítico", "email": "carlos@email.com", "senha": "password123", "telefone": "666666666", "role": "USER"},
 ]
 
 books = [
