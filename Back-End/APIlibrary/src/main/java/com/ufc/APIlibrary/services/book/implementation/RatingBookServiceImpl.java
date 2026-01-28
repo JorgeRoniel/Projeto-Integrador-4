@@ -31,7 +31,7 @@ public class RatingBookServiceImpl implements RatingBookService {
 
     @Override
     public String rating(DoRatingBookDTO data, Integer book_id) {
-        if (data.nota() == null || data.nota() < 0 || data.nota() > 5) {
+        if (data.nota() == null || (data.nota() < 0 && data.nota() != -1) || data.nota() > 5) {
             throw new InvalidRatingException();
         }
 
