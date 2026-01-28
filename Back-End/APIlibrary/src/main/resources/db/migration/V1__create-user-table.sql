@@ -1,0 +1,9 @@
+CREATE TABLE users_tb (
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(50),
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(50) NOT NULL,
+    password VARCHAR(50) NOT NULL,
+    phone_numer VARCHAR(15),
+    role VARCHAR(10) NOT NULL
+);

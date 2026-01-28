@@ -1,0 +1,9 @@
+package com.ufc.APIlibrary.dto.book;
+
+public record DoRatingBookDTO(Integer user_id, Integer nota, String comentario) {
+    public DoRatingBookDTO(Integer user_id, Integer nota, String comentario) {
+        this.user_id = user_id;
+        this.nota = nota;
+        this.comentario = (comentario == null || comentario.isEmpty()) ? "" : comentario;
+    }
+}
