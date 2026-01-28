@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Heart, BookOpen, ChevronRight, Search, X } from "lucide-react";
 import { searchBooks } from "../services/api";
 import BookCard from "../components/BookCard";
@@ -54,6 +55,7 @@ const ActionMenu = ({ livro, onAddWishlist, onAddMeusLivros, wishlist, meusLivro
 };
 
 function Catalogo({ livros: initialLivros, onAddWishlist, onAddMeusLivros, wishlist, meusLivros }) {
+  const navigate = useNavigate();
   const [livros, setLivros] = React.useState(initialLivros);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isSearching, setIsSearching] = React.useState(false);
@@ -154,7 +156,11 @@ function Catalogo({ livros: initialLivros, onAddWishlist, onAddMeusLivros, wishl
 
       <div className="flex gap-8 items-center overflow-x-auto pb-6 scrollbar-hide">
         {destaques.map((livro) => (
-          <div key={livro.id} className="min-w-[300px] relative group">
+          <div
+            key={livro.id}
+            className="min-w-[300px] relative group cursor-pointer"
+            onClick={() => navigate(`/livro/${livro.id}`)}
+          >
             <BookCard
               livro={livro}
               size="large"
@@ -190,7 +196,11 @@ function Catalogo({ livros: initialLivros, onAddWishlist, onAddMeusLivros, wishl
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 pb-6">
         {recomendacoes.map((livro) => (
-          <div key={livro.id} className="relative group">
+          <div
+            key={livro.id}
+            className="relative group cursor-pointer"
+            onClick={() => navigate(`/livro/${livro.id}`)}
+          >
             <BookCard
               livro={livro}
               showTitle={true}

@@ -157,6 +157,27 @@ export async function searchBooks(query) {
   });
 }
 
+/**
+ * Adiciona um novo livro (somente admin)
+ * @param {Object} bookData - Dados do livro
+ * @param {string} bookData.titulo - Título do livro
+ * @param {string} bookData.autor - Autor do livro
+ * @param {string} [bookData.editora] - Editora
+ * @param {number} [bookData.ano] - Ano de publicação
+ * @param {string} bookData.categoria - Categoria do livro
+ * @param {string} [bookData.descricao] - Descrição/sinopse
+ * @param {string} [bookData.imagemUrl] - URL da imagem da capa
+ * @param {string} [bookData.isbn] - ISBN
+ * @param {number} [bookData.paginas] - Número de páginas
+ * @returns {Promise<{success: boolean}>}
+ */
+export async function addBook(bookData) {
+  return fetchAPI("/api/book", {
+    method: "POST",
+    body: JSON.stringify(bookData),
+  });
+}
+
 // ==================== AVALIAÇÕES ====================
 
 /**
@@ -252,6 +273,8 @@ export default {
   deleteUser,
   listBooks,
   getBook,
+  searchBooks,
+  addBook,
   rateBook,
   getBookRatings,
   getUserRatings,
