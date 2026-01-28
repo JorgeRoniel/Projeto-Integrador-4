@@ -7,7 +7,10 @@ BASE_URL = "http://localhost:8080/api"
 
 def get_base64_image(url):
     try:
-        response = requests.get(url)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=10)
         if response.status_code == 200:
             return base64.b64encode(response.content).decode('utf-8')
     except Exception as e:
@@ -27,13 +30,16 @@ def register_user(username, nome, email, senha, telefone, role="USER"):
     try:
         response = requests.post(url, json=data)
         if response.status_code == 201:
-            print(f"Usuário {username} registrado com sucesso!")
+            print(f"✅ Usuário {username} registrado!")
             return True
+        elif response.status_code == 409:
+             print(f"⚠️ Usuário {username} já existe.")
+             return True # Consideramos sucesso para continuar
         else:
-            print(f"Erro ao registrar {username}: {response.text}")
+            print(f"❌ Erro ao registrar {username}: {response.text}")
             return False
     except Exception as e:
-        print(f"Erro de conexão ao registrar {username}: {e}")
+        print(f"❌ Erro de conexão ao registrar {username}: {e}")
         return False
 
 def login(email, senha):
@@ -44,40 +50,43 @@ def login(email, senha):
         if response.status_code == 200:
             return response.json()
         else:
-            print(f"Erro ao logar {email}: {response.text}")
+            print(f"❌ Erro ao logar {email}: {response.text}")
             return None
     except Exception as e:
-        print(f"Erro de conexão ao logar {email}: {e}")
+        print(f"❌ Erro de conexão ao logar {email}: {e}")
         return None
 
 def add_book(token, book_data):
     url = f"{BASE_URL}/book"
     headers = {"Authorization": f"Bearer {token}"}
     
+    # Clone data to avoid modifying original
+    data_to_send = book_data.copy()
+
     # Process image if it's a URL
-    if 'imagem_url' in book_data:
-        image_b64 = get_base64_image(book_data['imagem_url'])
+    if 'imagem_url' in data_to_send:
+        print(f"   Baixando capa de '{data_to_send['titulo']}'...")
+        image_b64 = get_base64_image(data_to_send['imagem_url'])
         if image_b64:
-             # O backend espera 'imagem' como byte array, mas em JSON enviamos como string Base64
-             del book_data['imagem_url']
-             book_data['imagem'] = image_b64
+             del data_to_send['imagem_url']
+             data_to_send['imagem'] = image_b64
         else:
-            # Se falhar, remove ou usa placeholder (depende da validação do back)
-             del book_data['imagem_url']
-             # book_data['imagem'] = [] # Enviando vazio se falhar
+             print("   ⚠️ Falha ao baixar imagem, enviando sem.")
+             del data_to_send['imagem_url']
 
     try:
-        response = requests.post(url, json=book_data, headers=headers)
+        response = requests.post(url, json=data_to_send, headers=headers)
         if response.status_code == 201:
-            book_id = response.json().get('id')
-            print(f"Livro '{book_data['titulo']}' adicionado! ID: {book_id}")
-            return book_id
+            # CORREÇÃO: Backend retorna id_livro, nao id
+            book_id = response.json().get('id_livro')
+            print(f"✅ Livro '{data_to_send['titulo']}' adicionado! ID: {book_id}")
+            return book_id, data_to_send['titulo']
         else:
-            print(f"Erro ao adicionar livro '{book_data['titulo']}': {response.text}")
-            return None
+            print(f"❌ Erro ao adicionar livro '{data_to_send['titulo']}': {response.text}")
+            return None, None
     except Exception as e:
-        print(f"Erro de conexão ao adicionar livro: {e}")
-        return None
+        print(f"❌ Erro de conexão ao adicionar livro: {e}")
+        return None, None
 
 def rate_book(token, book_id, user_id, nota, comentario):
     url = f"{BASE_URL}/book/{book_id}/rating"
@@ -90,25 +99,26 @@ def rate_book(token, book_id, user_id, nota, comentario):
     try:
         response = requests.post(url, json=data, headers=headers)
         if response.status_code == 200:
-            print(f"Avaliação enviada para livro {book_id}!")
+            print(f"   ⭐ Avaliação enviada!")
         else:
-            print(f"Erro ao avaliar livro {book_id}: {response.text}")
+            print(f"   ❌ Erro ao avaliar: {response.text}")
     except Exception as e:
-        print(f"Erro ao avaliar: {e}")
+        print(f"   ❌ Erro de conexão ao avaliar: {e}")
 
-# --- DATA ---
+# --- DATASETS ---
 
-admins = [
-    {"username": "admin", "nome": "Administrador", "email": "admin@email.com", "senha": "admin123", "telefone": "999999999", "role": "ADMIN"}
+ADMIN = {"username": "admin", "nome": "Administrador", "email": "admin@email.com", "senha": "admin123", "telefone": "999999999", "role": "ADMIN"}
+
+USERS = [
+    {"username": "leitor_vip", "nome": "Ricardo Souza", "email": "ricardo@email.com", "senha": "123", "telefone": "111111111", "role": "USER"},
+    {"username": "nanda_lima", "nome": "Fernanda Lima", "email": "fernanda@email.com", "senha": "123", "telefone": "222222222", "role": "USER"},
+    {"username": "potterhead", "nome": "Potter Head", "email": "potter@email.com", "senha": "123", "telefone": "333333333", "role": "USER"},
+    {"username": "gandalf_fan", "nome": "Gandalf O Cinzento", "email": "gandalf@email.com", "senha": "123", "telefone": "444444444", "role": "USER"},
+    {"username": "dev_senior", "nome": "Dev Senior", "email": "dev@email.com", "senha": "123", "telefone": "555555555", "role": "USER"},
+    {"username": "estudante_js", "nome": "Estudante JS", "email": "js@email.com", "senha": "123", "telefone": "666666666", "role": "USER"},
 ]
 
-users = [
-    {"username": "leitor1", "nome": "Alice Leitora", "email": "alice@email.com", "senha": "password123", "telefone": "888888888", "role": "USER"},
-    {"username": "leitor2", "nome": "Bob Leitor", "email": "bob@email.com", "senha": "password123", "telefone": "777777777", "role": "USER"},
-    {"username": "critico", "nome": "Carlos Crítico", "email": "carlos@email.com", "senha": "password123", "telefone": "666666666", "role": "USER"},
-]
-
-books = [
+BOOKS = [
     {
         "titulo": "The Black Wolf",
         "autor": "L. J. Smith",
@@ -117,7 +127,7 @@ books = [
         "editora": "Editora Fantasia",
         "categorias": ["Fantasia", "Suspense"],
         "descricao": "Um lobo solitário vaga pela floresta encantada em busca de redenção.",
-        "imagem_url": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=800&auto=format&fit=crop"
+        "imagem_url": "https://images.unsplash.com/photo-1614726365723-49cfaacf560b?q=80&w=800&auto=format&fit=crop"
     },
     {
         "titulo": "Harry Potter e a Pedra Filosofal",
@@ -126,17 +136,17 @@ books = [
         "ano_publicacao": 1997,
         "editora": "Rocco",
         "categorias": ["Fantasia", "Aventura"],
-        "descricao": "A história do menino que sobreviveu e descobriu ser um bruxo.",
+        "descricao": "A história do menino que sobreviveu e descobriu ser um bruxo no seu aniversário de 11 anos.",
         "imagem_url": "https://images.unsplash.com/photo-1626618012641-bf8ca5564394?q=80&w=800&auto=format&fit=crop"
     },
     {
-        "titulo": "O Senhor dos Anéis: A Sociedade do Anel",
+        "titulo": "O Senhor dos Anéis",
         "autor": "J.R.R. Tolkien",
         "edicao": "2a Edição",
         "ano_publicacao": 1954,
         "editora": "Martins Fontes",
         "categorias": ["Fantasia", "Épico"],
-        "descricao": "Uma jornada épica para destruir o Um Anel e salvar a Terra Média.",
+        "descricao": "Uma jornada épica pela Terra Média para destruir o Um Anel.",
         "imagem_url": "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?q=80&w=800&auto=format&fit=crop"
     },
     {
@@ -146,88 +156,87 @@ books = [
         "ano_publicacao": 2008,
         "editora": "Alta Books",
         "categorias": ["Tecnologia", "Programação"],
-        "descricao": "Como escrever código limpo e manutenível.",
-        "imagem_url": "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=800&auto=format&fit=crop"
-    },
-     {
-        "titulo": "O Pequeno Príncipe",
-        "autor": "Antoine de Saint-Exupéry",
-        "edicao": "3a Edição",
-        "ano_publicacao": 1943,
-        "editora": "Agir",
-        "categorias": ["Infantil", "Filosofia"],
-        "descricao": "Um piloto cai no deserto do Saara e encontra um jovem príncipe que viaja de planeta em planeta.",
-        "imagem_url": "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop"
+        "descricao": "Como escrever código limpo e manutenível. Leitura obrigatória para devs.",
+        "imagem_url": "https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=800&auto=format&fit=crop" # Generic code book
     }
 ]
 
-comments = [
-    "Livro incrível, recomendo muito!",
-    "Achei um pouco entediante no começo, mas depois melhora.",
-    "Um clássico indispensável.",
-    "Não gostei do final.",
-    "Excelente leitura para o fim de semana.",
-    "A escrita do autor é fenomenal."
-]
+# Map de avaliações: Chave é parte do título do livro, valor é lista de (username_key, nota, comentario)
+SCENARIO_RATINGS = {
+    "The Black Wolf": [
+        ("leitor_vip", 5, "Que suspense incrível! Armand Gamache nunca decepciona."),
+        ("nanda_lima", 4, "Muito bom, mas o meio do livro é um pouco lento.")
+    ],
+    "Harry Potter": [
+        ("potterhead", 5, "Um clássico eterno. Hogwarts é meu lar."),
+        ("estudante_js", 5, "Melhor livro infantil já escrito."),
+        ("nanda_lima", 5, "Reli pela décima vez e continua mágico.")
+    ],
+    "Senhor dos Anéis": [
+        ("gandalf_fan", 5, "A obra prima da fantasia. Tolkien é gênio.")
+    ],
+    "Clean Code": [
+        ("dev_senior", 5, "Todo programador deveria ler. Mudou minha carreira."),
+        ("estudante_js", 3, "Conteúdo ótimo, mas os exemplos em Java são difíceis pra quem só sabe JS.")
+    ]
+}
 
 def main():
-    print("=== POPULANDO BANCO DE DADOS ===")
+    print("=== POPULANDO BANCO DE DADOS PARA APRESENTAÇÃO ===\n")
     
     # 1. Registrar Admin
-    print("\n[1] Registrando Admin...")
-    register_user(**admins[0])
-    
-    # 2. Login Admin
-    print("\n[2] Logando como Admin...")
-    admin_login = login(admins[0]["email"], admins[0]["senha"])
+    print("[1] Configurando Admin...")
+    register_user(**ADMIN)
+    admin_login = login(ADMIN["email"], ADMIN["senha"])
     if not admin_login:
-        print("Falha crítica: Não foi possível logar como admin. Abortando.")
+        print("❌ Falha crítica no login do admin.")
         return
-
     admin_token = admin_login.get("token")
-    if not admin_token:
-        print("Falha crítica: Token não retornado.")
-        return
-        
-    print("Admin logado com sucesso.")
 
-    # 3. Adicionar Livros
-    print("\n[3] Adicionando Livros...")
-    book_ids = []
-    for book in books:
-        bid = add_book(admin_token, book)
+    # 2. Adicionar Livros e Guardar IDs
+    print("\n[2] Cadastrando Livros...")
+    book_map = {} # titulo -> id
+    for book in BOOKS:
+        bid, titulo = add_book(admin_token, book)
         if bid:
-            book_ids.append(bid)
-            
-    # 4. Registrar Usuários Comuns
-    print("\n[4] Registrando Usuários...")
-    registered_users_logins = []
-    for u in users:
-        if register_user(**u):
-            # Tenta logar para pegar ID e Token
-            login_data = login(u["email"], u["senha"])
-            if login_data:
-                registered_users_logins.append(login_data)
+            book_map[titulo] = bid
 
-    # 5. Adicionar Avaliações
-    print("\n[5] Adicionando Avaliações Aleatórias...")
-    if not book_ids or not registered_users_logins:
-        print("Sem livros ou usuários suficientes para avaliar.")
-    else:
-        for user_data in registered_users_logins:
-            uid = user_data["user_id"] # Assumindo que o login retorna user_id
-            utoken = user_data["token"]
-            
-            # Cada usuário avalia aleatoriamente alguns livros
-            num_reviews = random.randint(1, len(book_ids))
-            books_to_review = random.sample(book_ids, num_reviews)
-            
-            for bid in books_to_review:
-                nota = random.randint(3, 5) # Notas boas
-                comentario = random.choice(comments)
-                rate_book(utoken, bid, uid, nota, comentario)
+    # 3. Registrar Usuários e Guardar Tokens
+    print("\n[3] Criando Usuários da Comunidade...")
+    user_tokens = {} # username -> {id, token}
+    for u in USERS:
+        register_user(**u)
+        login_data = login(u["email"], u["senha"])
+        if login_data:
+            user_tokens[u["username"]] = {
+                "id": login_data.get("user_id") or login_data.get("id"), # Try both just in case
+                "token": login_data.get("token")
+            }
 
-    print("\n=== PROCESSO CONCLUÍDO ===")
+    # 4. Adicionar Avaliações do Cenário
+    print("\n[4] Inserindo Comentários e Avaliações Reais...")
+    for book_title_key, reviews in SCENARIO_RATINGS.items():
+        # Achar ID do livro pelo título (partial match)
+        target_bid = None
+        for saved_title, saved_id in book_map.items():
+            if book_title_key in saved_title:
+                target_bid = saved_id
+                break
+        
+        if not target_bid:
+            print(f"⚠️ Livro não encontrado para chave '{book_title_key}'")
+            continue
+
+        print(f"📝 Avaliando '{book_title_key}' (ID: {target_bid})...")
+        for username, nota, comentario in reviews:
+            user_info = user_tokens.get(username)
+            if user_info:
+                rate_book(user_info["token"], target_bid, user_info["id"], nota, comentario)
+            else:
+                print(f"   ⚠️ Usuário '{username}' não encontrado para avaliar.")
+
+    print("\n=== SCRIPT FINALIZADO COM SUCESSO! ===")
+    print("Agora você pode rodar este script e sua apresentação terá dados lindos! 🚀")
 
 if __name__ == "__main__":
     main()

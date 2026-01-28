@@ -73,7 +73,7 @@ function MeusLivros({ meusLivros, setMeusLivros, atualizarAvaliacaoLivro }) {
               onClick={() => handleClickLivro(livro)}
               className="cursor-pointer transition-transform hover:scale-105"
             >
-              <BookCard livro={livro} showRating={true} />
+              <BookCard livro={livro} showRating={true} rating={livro.avaliacao} />
             </div>
           ))}
         </div>
