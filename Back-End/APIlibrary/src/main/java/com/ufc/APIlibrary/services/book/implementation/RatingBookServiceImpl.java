@@ -17,6 +17,7 @@ import com.ufc.APIlibrary.services.book.RatingBookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -31,36 +32,47 @@ public class RatingBookServiceImpl implements RatingBookService {
 
     @Override
     public String rating(DoRatingBookDTO data, Integer book_id) {
+
         if (data.nota() == null || (data.nota() < 0 && data.nota() != -1) || data.nota() > 5) {
             throw new InvalidRatingException();
         }
 
-        // Tenta encontrar avaliação existente para o par Usuário/Livro
-        BookRating rating = repository.findByUserIdAndBookId(data.user_id(), book_id);
+        User user = userRepository.findById(data.user_id())
+            .orElseThrow(UserNotFoundException::new);
+
+        Book book = bookRepository.findById(book_id)
+            .orElseThrow(BookNotFoundException::new);
+
+        BookRating rating = repository.findByUserIdAndBookId(user.getId(), book_id);
 
         if (rating != null) {
-            // Atualiza existente
+            // Atualiza avaliação existente
             rating.setRating(data.nota());
             rating.setReview(data.comentario());
-            rating.setDate_review(java.time.LocalDate.now());
+            rating.setDate_review(LocalDate.now());
             repository.save(rating);
         } else {
-            // Cria nova
-            User user = userRepository.findById(data.user_id())
-                    .orElseThrow(UserNotFoundException::new);
-            Book book = bookRepository.findById(book_id)
-                    .orElseThrow(BookNotFoundException::new);
-
+            // Cria nova avaliação
             BookRating newRating = new BookRating(user, book, data.nota(), data.comentario());
-            // Vincula explicitamente o ID composto
             newRating.getId().setUserId(user.getId());
             newRating.getId().setBookId(book.getId());
-
             repository.save(newRating);
         }
 
+        // RECALCULA MÉTRICAS DO LIVRO
+        Integer reviewsCount = repository.countValidRatings(book_id);
+        Integer sumRatings = repository.sumValidRatings(book_id);
+
+        float avg = (reviewsCount == 0) ? 0f : (float) sumRatings / reviewsCount;
+
+        book.setReviews_count(reviewsCount);
+        book.setSum_ratings(sumRatings);
+        book.setRating_avg(avg);
+
+        bookRepository.save(book);
+
         return "OK";
-    }
+}
 
     @Override
     public List<ReturnRatingBookDTO> listRatedForBooks(Integer book_id) {
