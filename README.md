@@ -7,7 +7,7 @@
 3 - Execute o seguinte comando:
 
 ```
-docker-compose up -d
+docker compose up -d
 ```
 
 4 - Acesse: http://localhost:3000/
