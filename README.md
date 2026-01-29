@@ -1,16 +1,15 @@
-Como rodar?
+<h1>Como executar a aplicação:</h1>
 
-```
-docker-compose pull
-```
+1 - Para rodar a aplicação, certifique-se de possuir o <b>Docker/Docker-Engine</b> na sua máquina
 
-Para pegar as imagens do dockerhub
+2 - Abra o terminal na pasta raiz do projeto, onde se encontra o arquivo *docker-compose.yaml*
+
+3 - Execute o seguinte comando:
 
 ```
 docker-compose up -d
 ```
 
-Para os containers
+4 - Acesse: http://localhost:3000/
 
-Você pode acessar a aplicação em http://localhost:3000/
-E você pode visualizar as rotas no swagger em: http://localhost:8080/swagger-ui/index.html
+Você  também pode visualizar as rotas documentadas via Swagger em: http://localhost:8080/swagger-ui/index.html
