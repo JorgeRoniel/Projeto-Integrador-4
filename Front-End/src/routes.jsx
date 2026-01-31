@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import RecuperarSenha from "./pages/RecuperarSenha";
+import ResetPassword from "./pages/ResetPassword";
 import Confirmacao from "./pages/Confirmacao";
 import Catalogo from "./pages/Catalogo";
 import ListaDesejo from "./pages/ListaDesejo";
@@ -24,6 +25,8 @@ function AppRoutes({
   logoEscura,
   logoClara,
   livros,
+  reloadBooks,
+  handleToggleNotification,
 }) {
   return (
     <Routes>
@@ -40,6 +43,8 @@ function AppRoutes({
         element={<RecuperarSenha logoEscura={logoEscura} />}
       />
       <Route path="/confirmacao" element={<Confirmacao />} />
+
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       <Route
         path="/catalogo"
@@ -58,6 +63,7 @@ function AppRoutes({
         element={
           <DetalhesLivro
             livros={livros}
+            wishlist={wishlist}
             onAddWishlist={adicionarAListaDesejo}
             onAddMeusLivros={adicionarAMeusLivros}
             meusLivros={meusLivros}
@@ -71,6 +77,7 @@ function AppRoutes({
             wishlist={wishlist}
             onRemove={removerDaListaDesejo}
             onMoverParaMeusLivros={moverParaMeusLivros}
+            onToggleNotification={handleToggleNotification}
           />
         }
       />
@@ -86,8 +93,10 @@ function AppRoutes({
         }
       />
       <Route path="/perfil" element={<Perfil />} />
-      <Route path="/admin" element={<Admin />} />
-
+      <Route
+      path="/admin"
+      element={<Admin reloadBooks={reloadBooks} />}
+      />
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />

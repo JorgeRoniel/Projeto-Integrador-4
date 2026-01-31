@@ -1,0 +1,2 @@
+ALTER TABLE users_tb ADD COLUMN resetToken VARCHAR(255);
+ALTER TABLE users_tb ADD COLUMN tokenExpiration TIMESTAMP;

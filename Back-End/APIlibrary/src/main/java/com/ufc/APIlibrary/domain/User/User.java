@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -30,7 +31,10 @@ public class User implements UserDetails {
     private String password;
     private String phone_number;
     private byte[] profile;
+    @Enumerated(EnumType.STRING)
     private UserRoles role;
+    private String resetToken;
+    private LocalDateTime tokenExpiration;
 
     public User(String username, String name, String email, String password, String phone_number, byte[] profile,
             UserRoles role) {

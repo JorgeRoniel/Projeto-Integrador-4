@@ -13,7 +13,9 @@ services:
       - app-network
 
   backend:
-    image: gronite/backend-pi4:latest
+    build:
+      context: ./Back-End/APIlibrary
+      dockerfile: Dockerfile
     container_name: Back-End-PI4
     depends_on:
       postgres:
@@ -29,7 +31,9 @@ services:
     restart: on-failure
 
   frontend:
-    image: gronite/frontend-pi4:latest
+    build:
+      context: ./Front-End
+      dockerfile: Dockerfile
     container_name: Front-End-PI4
     depends_on:
       - backend

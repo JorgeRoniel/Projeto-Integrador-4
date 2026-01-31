@@ -37,6 +37,8 @@ public class WebSecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/user/recover-password").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/user/reset-password-final").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/book/**").permitAll() // Home/Catalog public
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated())

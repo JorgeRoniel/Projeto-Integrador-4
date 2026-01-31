@@ -38,8 +38,8 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReturnBookLongDTO> returnBook(@PathVariable Integer id) {
-        ReturnBookLongDTO book = bookService.findBook(id);
+    public ResponseEntity<ReturnBookShortDTO> returnBook(@PathVariable Integer id, @RequestParam(required = false) Integer userId) {
+        ReturnBookShortDTO book = bookService.findBook(id, userId);
         if (book == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         return ResponseEntity.ok(book);

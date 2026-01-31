@@ -15,6 +15,8 @@ import {
   getUserWishlist,
   rateBook,
   getUserRatings,
+  checkNotifications,
+  updateNotificationStatus,
 } from "./services/api";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -34,22 +36,54 @@ function App() {
 
   // Busca os livros ao montar o componente
   useEffect(() => {
-    async function loadBooks() {
-      try {
-        setIsLoadingBooks(true);
-        const data = await listBooks(0, 50);
-        setLivros(data.content || data || []);
-      } catch (error) {
-        console.error("Erro ao carregar livros:", error);
-        toast.error("Não foi possível carregar o catálogo de livros.", {
-          id: "error-catalog",
-        });
-      } finally {
-        setIsLoadingBooks(false);
-      }
-    }
     loadBooks();
   }, []);
+
+  const loadBooks = async () => {
+  try {
+    setIsLoadingBooks(true);
+    const data = await listBooks(0, 50);
+    setLivros(data.content || data || []);
+  } catch (error) {
+    console.error("Erro ao carregar livros:", error);
+    toast.error("Não foi possível carregar o catálogo.");
+  } finally {
+    setIsLoadingBooks(false);
+  }
+};
+
+// Novo useEffect para verificar notificações de disponibilidade
+  useEffect(() => {
+    async function verifyNotifications() {
+      if (user?.id) {
+        try {
+          const notifications = await checkNotifications(user.id);
+        
+          if (notifications && notifications.length > 0) {
+            notifications.forEach((notif) => {
+
+              toast.success(
+                `O livro "${notif.title}" já chegou à biblioteca!`,
+                {
+                  duration: 6000, 
+                  icon: "📚",
+                  style: {
+                    border: '1px solid #001b4e',
+                    padding: '16px',
+                    color: '#001b4e',
+                  },
+                }
+              );
+            });
+          }
+        } catch (error) {
+          console.error("Erro ao buscar notificações:", error);
+        }
+      }
+    }
+
+    verifyNotifications();
+  }, [user?.id]);
 
   // Busca Wishlist quando o usuário logar
   useEffect(() => {
@@ -79,9 +113,9 @@ function App() {
             ...book,
             // Prioridade para 'nota' que agora vem no ReturnBookShortDTO
             avaliacao:
-              book.nota !== undefined && book.nota !== null
+              book.nota !== undefined && book.nota !== null  && book.nota !== -1
                 ? Number(book.nota)
-                : book.rating || book.media || 0,
+                : book.rating || 0,
           }));
           setMeusLivros(formatted);
         } catch (error) {
@@ -135,6 +169,49 @@ function App() {
     }
   };
 
+const handleToggleNotification = async (livro) => {
+  if (!user?.id) return;
+
+  if (livro.data_aquisicao) {
+    // O replace garante que o JS não mude o dia por causa do fuso.
+    const dataAquisicao = new Date(livro.data_aquisicao.replace(/-/g, '\/'));
+    dataAquisicao.setHours(0, 0, 0, 0);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    if (hoje >= dataAquisicao) {
+      toast(`O livro "${livro.titulo}" já está disponível na biblioteca!`, {
+        icon: "📚",
+      });
+      return;
+    }
+  }
+  const novoStatus = !livro.notificacao;
+
+  try {
+    await updateNotificationStatus({
+      user_id: user.id,
+      book_id: livro.id,
+      notificacao: novoStatus
+    });
+
+    setWishlist((prev) =>
+      prev.map((item) =>
+        item.id === livro.id ? { ...item, notificacao: novoStatus } : item
+      )
+    );
+
+    if (novoStatus) {
+      toast.success("Notificação ativada! Te avisaremos quando chegar.");
+    } else {
+      toast.success("Notificações desativadas para este livro.");
+    }
+  } catch (error) {
+    toast.error("Erro ao atualizar preferência de notificação.");
+    console.error(error);
+  }
+};
+
   // Função para remover um livro da lista de desejo
   const removerDaListaDesejo = async (id) => {
     if (!user) return;
@@ -157,12 +234,24 @@ function App() {
       return;
     }
 
+    if (livro.data_aquisicao) {
+        const dataAquisicao = new Date(livro.data_aquisicao.replace(/-/g, '\/'));
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        dataAquisicao.setHours(0,0,0,0);
+
+        if (hoje < dataAquisicao) {
+            toast.error("Este livro ainda não chegou na biblioteca. Adicione à Lista de Desejos para ser avisado!");
+            return;
+        }
+    }
+
     const bookId = Number(livro.id);
     const userId = Number(user.id);
     if (!meusLivros.find((item) => Number(item.id) === bookId)) {
       try {
         await rateBook(bookId, userId, -1);
-        const livroComAvaliacao = { ...livro, id: bookId, avaliacao: 0 };
+        const livroComAvaliacao = { ...livro, id: bookId, avaliacao: -1 };
         setMeusLivros((prev) => [...prev, livroComAvaliacao]);
         toast.success(`"${livro.titulo}" adicionado a Meus Livros!`);
       } catch (error) {
@@ -183,7 +272,7 @@ function App() {
         await rateBook(bookId, userId, -1);
         await removeFromWishlist(userId, bookId);
 
-        const livroComAvaliacao = { ...livro, id: bookId, avaliacao: 0 };
+        const livroComAvaliacao = { ...livro, id: bookId, avaliacao: -1 };
         setMeusLivros((prev) => [...prev, livroComAvaliacao]);
         setWishlist((prev) =>
           prev.filter((item) => Number(item.id) !== bookId),
@@ -258,6 +347,8 @@ function App() {
               logoEscura={logoEscura}
               logoClara={logoClara}
               livros={livros}
+              reloadBooks={loadBooks}
+              handleToggleNotification={handleToggleNotification}
             />
           </main>
         </div>
@@ -277,6 +368,8 @@ function App() {
           logoEscura={logoEscura}
           logoClara={logoClara}
           livros={livros}
+          reloadBooks={loadBooks}
+          handleToggleNotification={handleToggleNotification}
         />
       )}
     </div>

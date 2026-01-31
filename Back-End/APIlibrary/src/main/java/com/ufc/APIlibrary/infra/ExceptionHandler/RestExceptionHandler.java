@@ -3,6 +3,9 @@ package com.ufc.APIlibrary.infra.ExceptionHandler;
 import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.book.InvalidRatingException;
 import com.ufc.APIlibrary.infra.exceptions.book.WishListAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.user.ExpiredTokenException;
+import com.ufc.APIlibrary.infra.exceptions.user.InvalidPasswordException;
+import com.ufc.APIlibrary.infra.exceptions.user.InvalidTokenException;
 import com.ufc.APIlibrary.infra.exceptions.user.RatingNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.RegisterErrorException;
 import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
@@ -34,6 +37,19 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     // TRATAMENTO DE EXCESSÕES ACERCA DAS FUNÇÕES DO CONTROLLER 'USERCONTROLLER'
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<FormaterRestException> authErrorHandler(AuthenticationException exception) {
+        FormaterRestException response =
+            new FormaterRestException(
+                HttpStatus.UNAUTHORIZED,
+            "Email ou senha inválidos"
+        );
+
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(response);
+    }
+
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ResponseEntity<FormaterRestException> invalidPasswordHandler(InvalidPasswordException exception) {
         FormaterRestException response = new FormaterRestException(HttpStatus.BAD_REQUEST, exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
@@ -83,6 +99,20 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<FormaterRestException> wishlistAlreadyExists(WishListAlreadyExistsException ex) {
         FormaterRestException response = new FormaterRestException(HttpStatus.CONFLICT, ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    // TRATAMENTO DE EXCESSÕES ACERCA DAS FUNÇÕES DO TOKEN DE RECUPERAÇÃO DE SENHA
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<FormaterRestException> invalidTokenHandler(InvalidTokenException exception) {
+        FormaterRestException response = new FormaterRestException(HttpStatus.BAD_REQUEST, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(ExpiredTokenException.class)
+    public ResponseEntity<FormaterRestException> expiredTokenHandler(ExpiredTokenException exception) {
+        FormaterRestException response = new FormaterRestException(HttpStatus.GONE, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.GONE).body(response);
     }
 
 }
