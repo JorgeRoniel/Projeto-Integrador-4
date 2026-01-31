@@ -1,54 +1,68 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Star, Calendar, MessageSquare } from "lucide-react";
+import { ArrowLeft, BookOpen, Star, Calendar, MessageSquare, Heart } from "lucide-react";
 import BookCard from "../components/BookCard";
-import { getBookRatings } from "../services/api";
+import { getBook, getBookRatings } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 
-function DetalhesLivro({ livros, onAddWishlist, onAddMeusLivros, meusLivros }) {
+function DetalhesLivro({ livros, onAddWishlist, onAddMeusLivros, meusLivros, wishlist }) {
     const { id } = useParams();
     const navigate = useNavigate();
-
+    const { user } = useAuth();
     const [livro, setLivro] = useState(null);
 
-
     const [comentarios, setComentarios] = useState([]); // Começa vazio
-    const [carregandoComentarios, setCarregandoComentarios] = useState(true); // Controla o loading
+    const [estaCarregando, setEstaCarregando] = useState(true); // Controla o loading
+    const [carregandoComentarios, setCarregandoComentarios] = useState(true);
+
+    const jaEstaNosMeusLivros = meusLivros?.some(i => Number(i.id) === Number(id));
+    const jaEstaNaWishlist = wishlist?.some(i => Number(i.id) === Number(id));
 
     // Efeito para carregar os dados do Livro (Do catálogo local por enquanto)
-    useEffect(() => {
-        if (livros && livros.length > 0) {
-            const livroEncontrado = livros.find((l) => String(l.id) === String(id));
-            setLivro(livroEncontrado);
+    const carregarTudo = async () => {
+        setEstaCarregando(true);
+        setCarregandoComentarios(true);
+        try {
+            // Roda as duas buscas em paralelo para ganhar tempo
+            const [dadosLivro, dadosComentarios] = await Promise.all([
+                getBook(id, user?.id),
+                getBookRatings(id)
+            ]);
+            
+            setLivro(dadosLivro);
+            setEstaCarregando(false);
+            setComentarios(dadosComentarios || []);
+        } catch (error) {
+            console.error("Erro ao carregar dados:", error);
+        } finally {
+            setCarregandoComentarios(false);
         }
-    }, [id, livros]);
+    };
 
-
-    // Efeito para carregar os Comentários (API Real)
     useEffect(() => {
-        async function fetchComentarios() {
-            if (!id) return;
+        carregarTudo();
+    }, [id, user?.id]);
 
-            setCarregandoComentarios(true);
-            try {
-                const dados = await getBookRatings(id);
-                setComentarios(dados || []);
-            } catch (error) {
-                console.error("Erro ao carregar comentários:", error);
-                setComentarios([]);
-            } finally {
-                setCarregandoComentarios(false);
-            }
+    const handleAcaoSucesso = async (callbackAcao, item) => {
+        try {
+
+            await callbackAcao(item);
+
+            const novosDadosLivro = await getBook(id, user?.id);
+        
+            setLivro(novosDadosLivro);
+        
+        } catch (error) {
+            console.error("Erro ao atualizar dados:", error);
         }
-
-        fetchComentarios();
-    }, [id]);
-
+    };
 
     // Se o livro principal ainda não carregou
-    if (!livro) {
+    if (estaCarregando || !livro) {
         return (
             <div className="flex h-screen items-center justify-center text-[#001b4e]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#001b4e] mr-3"></div>
                 Carregando informações do livro...
             </div>
         );
@@ -61,6 +75,8 @@ function DetalhesLivro({ livros, onAddWishlist, onAddMeusLivros, meusLivros }) {
     };
 
     const related = livros.filter((l) => l.id !== livro.id).slice(0, 4);
+    const popularidade = (livro?.popularidade || 0).toFixed(0) + "%";
+    const notaUsuario = livro?.nota;
 
     const renderEstrelas = (nota) => {
         return (
@@ -75,13 +91,6 @@ function DetalhesLivro({ livros, onAddWishlist, onAddMeusLivros, meusLivros }) {
             </div>
         );
     };
-
-    // Lógica para Nota do Usuário (busca em 'meusLivros')
-    const livroUsuario = meusLivros?.find(l => String(l.id) === String(id));
-    const notaUsuario = livroUsuario ? livroUsuario.avaliacao : null;
-
-    // Lógica Fake de Popularidade baseada em reviews
-    const popularidade = Math.min(100, Math.max(15, comentarios.length * 20)) + "%";
 
     return (
         <div className="max-w-6xl mx-auto p-6 animate-in fade-in pb-20">
@@ -117,7 +126,7 @@ function DetalhesLivro({ livros, onAddWishlist, onAddMeusLivros, meusLivros }) {
                         <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-2xl flex flex-col items-center justify-center min-h-[100px]">
                             <span className="text-sm font-bold text-[#001b4e] mb-1">Nota do usuário</span>
                             <span className="text-3xl font-bold text-[#001b4e]">
-                                {notaUsuario !== null && notaUsuario !== undefined ? notaUsuario : "-"}
+                                {notaUsuario !== null && notaUsuario !== undefined && notaUsuario !== -1 ? notaUsuario : "-"}
                             </span>
                         </div>
                         <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-2xl flex flex-col items-center justify-center min-h-[100px]">
@@ -134,14 +143,31 @@ function DetalhesLivro({ livros, onAddWishlist, onAddMeusLivros, meusLivros }) {
                             </span>
                         </div>
                     </div>
+                    <div className="flex flex-col sm:flex-row gap-4 mb-10">
+                        <button
+                        onClick={() => handleAcaoSucesso(onAddMeusLivros, livro)}
+                        disabled={jaEstaNosMeusLivros}
+                        className={`flex-1 font-bold py-4 px-8 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg 
+                        ${jaEstaNosMeusLivros 
+                        ? "bg-green-100 text-green-600 cursor-default" 
+                        : "bg-[#001b4e] hover:bg-[#002a6e] text-white hover:shadow-xl"}`}
+                        >
+                        <BookOpen size={24} className={jaEstaNosMeusLivros ? "text-green-600" : ""} />
+                        {jaEstaNosMeusLivros ? "Na sua estante" : "Adicionar à lista de leitura"}
+                        </button>
 
-                    <button
-                        onClick={() => onAddWishlist(livro)}
-                        className="w-full sm:w-auto bg-[#001b4e] hover:bg-[#002a6e] text-white font-bold py-4 px-8 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg hover:shadow-xl mb-10"
+                        <button
+                            onClick={() => handleAcaoSucesso(onAddWishlist, livro)}
+                        className="bg-white border-2 border-red-500 text-red-500 hover:bg-red-50 font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-3 transition-all shadow-md"
+                        title="Adicionar à Lista de Desejos"
                     >
-                        <BookOpen size={24} />
-                        Adicionar a lista de leitura
+                    <Heart 
+                    size={24} 
+                    className={jaEstaNaWishlist ? "fill-red-500 text-red-500" : "text-gray-400"} 
+                    />
+                    <span className="hidden sm:inline">{jaEstaNaWishlist ? "Está na Lista de Desejos" : "Adicionar à Lista de Desejos"}</span>
                     </button>
+                    </div>
 
                     <div className="mb-8">
                         <h3 className="text-lg font-bold text-[#001b4e] mb-3 border-b border-gray-100 pb-2">

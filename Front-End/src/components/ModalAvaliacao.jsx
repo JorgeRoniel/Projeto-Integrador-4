@@ -31,6 +31,12 @@ const StarRatingInput = ({ rating, setRating }) => {
   );
 };
 
+    const getImageSrc = (img) => {
+        if (!img) return "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop";
+        if (img.startsWith('http') || img.startsWith('data:')) return img;
+        return `data:image/jpeg;base64,${img}`;
+    };
+
 function ModalAvaliacao({
   isOpen,
   onClose,
@@ -108,7 +114,7 @@ function ModalAvaliacao({
           <div className="flex-shrink-0">
             <div className="w-44 h-64 rounded-lg overflow-hidden shadow-lg">
               <img
-                src={livro.capa}
+                src={getImageSrc(livro.imagem || livro.capa)}
                 alt={livro.titulo}
                 className="w-full h-full object-cover"
               />

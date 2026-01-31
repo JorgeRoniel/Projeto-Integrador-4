@@ -73,6 +73,31 @@ export async function login(email, senha) {
 }
 
 /**
+ * Solicita o link de recuperação de senha
+ * @param {string} email - Email do usuário
+ * @returns {Promise<{success: boolean}>}
+ */
+export async function recoverPassword(email) {
+  return fetchAPI("/api/user/recover-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+/**
+ * Define uma nova senha para o usuário
+ * @param {string} token - Token vindo da URL do e-mail
+ * @param {string} senha - Nova senha digitada
+ * @returns {Promise<{success: boolean}>}
+ */
+export async function resetPasswordFinal(token, senha) {
+  return fetchAPI("/api/user/reset-password-final", {
+    method: "PUT",
+    body: JSON.stringify({ token, senha }),
+  });
+}
+
+/**
  * Realiza cadastro de novo usuário
  * @param {Object} dados - Dados do usuário
  * @param {string} dados.username - Nome de usuário
@@ -121,6 +146,31 @@ export async function deleteUser(userId) {
   });
 }
 
+// ==================== ADMIN ====================
+
+/**
+ * Lista usernames dos administradores
+ * @returns {Promise<Array<string>>}
+ */
+export async function getAdminUsernames() {
+  return fetchAPI("/api/user/admin/usernames", {
+    method: "GET",
+  });
+}
+
+/**
+ * Atualiza a role de um usuário pelo username (ADMIN ou USER)
+ * @param {string} username
+ * @param {"ADMIN" | "USER"} role
+ * @returns {Promise<{success: boolean}>}
+ */
+export async function updateUserRole(username, role) {
+  return fetchAPI(`/api/user/role/${username}`, {
+    method: "PUT",
+    body: JSON.stringify({ role }),
+  });
+}
+
 // ==================== LIVROS ====================
 
 /**
@@ -138,12 +188,12 @@ export async function listBooks(page = 0, size = 12) {
 /**
  * Busca um livro pelo ID
  * @param {number} bookId - ID do livro
+ * @param {number} userId - ID do usuário
  * @returns {Promise<Object>}
  */
-export async function getBook(bookId) {
-  return fetchAPI(`/api/book/${bookId}`, {
-    method: "GET",
-  });
+export async function getBook(bookId, userId) {
+  const url = userId ? `/api/book/${bookId}?userId=${userId}` : `/api/book/${bookId}`;
+  return fetchAPI(url, { method: "GET" });
 }
 
 /**
@@ -266,6 +316,30 @@ export async function getUserWishlist(userId) {
   });
 }
 
+// ==================== NOTIFICAÇÕES ====================
+
+/**
+ * Busca notificações de livros da wishlist que já foram adquiridos
+ * @param {number} userId - ID do usuário
+ * @returns {Promise<Array<{bookId: number, title: string}>>}
+ */
+export async function checkNotifications(userId) {
+  return fetchAPI(`/api/wishlist/check/${userId}`, {
+    method: "GET",
+  });
+}
+
+/**
+ * Atualiza o status de notificação de um item da wishlist
+ * @param {Object} data - { user_id, book_id, notification }
+ */
+export async function updateNotificationStatus(data) {
+  return fetchAPI("/api/wishlist/notification", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export default {
   login,
   register,
@@ -282,4 +356,10 @@ export default {
   removeFromWishlist,
   getUserWishlist,
   getDashboardData,
+  getAdminUsernames,
+  updateUserRole,
+  checkNotifications,
+  updateNotificationStatus,
+  recoverPassword,
+  resetPasswordFinal,
 };

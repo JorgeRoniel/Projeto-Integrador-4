@@ -14,7 +14,7 @@ function MeusLivros({ meusLivros, setMeusLivros, atualizarAvaliacaoLivro }) {
   // Abrir modal correto baseado se livro já tem avaliação
   const handleClickLivro = (livro) => {
     setLivroSelecionado(livro);
-    if (livro.avaliacao) {
+    if (livro.avaliacao && livro.avaliacao !== -1) {
       // Livro já tem avaliação - abrir modal de visualização
       setModalVisualizarAberto(true);
     } else {

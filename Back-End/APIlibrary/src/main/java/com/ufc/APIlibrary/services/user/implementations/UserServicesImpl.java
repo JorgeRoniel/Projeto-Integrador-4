@@ -1,22 +1,36 @@
 package com.ufc.APIlibrary.services.user.implementations;
 
 import com.ufc.APIlibrary.domain.User.User;
+import com.ufc.APIlibrary.domain.User.UserRoles;
 import com.ufc.APIlibrary.dto.user.LoginUserDTO;
 import com.ufc.APIlibrary.dto.user.RegisterUserDTO;
+import com.ufc.APIlibrary.dto.user.ResetPasswordDTO;
 import com.ufc.APIlibrary.dto.user.ReturnLoginDTO;
 import com.ufc.APIlibrary.dto.user.UpdateUserDTO;
+import com.ufc.APIlibrary.infra.exceptions.user.ExpiredTokenException;
+import com.ufc.APIlibrary.infra.exceptions.user.InvalidPasswordException;
+import com.ufc.APIlibrary.infra.exceptions.user.InvalidTokenException;
+import com.ufc.APIlibrary.infra.exceptions.user.LastAdminException;
 import com.ufc.APIlibrary.infra.exceptions.user.RegisterErrorException;
 import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
 import com.ufc.APIlibrary.repositories.UserRepository;
+import com.ufc.APIlibrary.services.email.EmailService;
 import com.ufc.APIlibrary.services.token.TokenService;
 import com.ufc.APIlibrary.services.user.UserServices;
 import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.EmailAlreadyExistsException;
 import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.PhoneNumberAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.UsernameAlreadyExistsException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+
+import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class UserServicesImpl implements UserServices {
@@ -29,6 +43,8 @@ public class UserServicesImpl implements UserServices {
     private UserRepository repository;
     @Autowired
     private PasswordEncoder encoder;
+    @Autowired
+    private EmailService emailService;
 
     @Override
     public ReturnLoginDTO login(LoginUserDTO data) {
@@ -43,6 +59,10 @@ public class UserServicesImpl implements UserServices {
 
     @Override
     public User register(RegisterUserDTO data) throws RegisterErrorException {
+        if (data.senha() == null || data.senha().length() < 6) {
+            throw new InvalidPasswordException();
+        }
+
         if (repository.existsByEmail(data.email())) {
             throw new EmailAlreadyExistsException();
         }
@@ -50,40 +70,53 @@ public class UserServicesImpl implements UserServices {
             throw new PhoneNumberAlreadyExistsException();
         }
 
+        if (repository.existsByUsername(data.username())) {
+            throw new UsernameAlreadyExistsException();
+        }
+
+
         String pass = encoder.encode(data.senha());
         // Constructor expectations: username, name, email, password, phone, role
-        User u = new User(data.username(), data.nome(), data.email(), pass, data.telefone(), data.role());
+        User u = new User(data.username(), data.nome(), data.email(), pass, data.telefone(), UserRoles.USER);
         return repository.save(u);
     }
 
     @Override
     public void updateUser(Integer user_id, UpdateUserDTO data) {
-        var u = repository.findById(user_id).orElse(null);
 
-        if (u != null) {
-            if (data.senha() != null && !data.senha().isBlank()) {
-                String new_pass = encoder.encode(data.senha());
-                u.setPassword(new_pass);
+        User user = repository.findById(user_id)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (data.senha() != null && !data.senha().isBlank()) {
+
+            if (data.senha().length() < 6) {
+                throw new InvalidPasswordException();
             }
-
-            // Uniqueness checks for Update
-            if (!u.getEmail().equals(data.email()) && repository.existsByEmail(data.email())) {
-                throw new EmailAlreadyExistsException();
-            }
-            if (!u.getPhone_number().equals(data.telefone()) && repository.existsByPhoneNumber(data.telefone())) {
-                throw new PhoneNumberAlreadyExistsException();
-            }
-
-            u.setUsername(data.username());
-            u.setName(data.nome());
-            u.setEmail(data.email());
-            u.setProfile(data.foto());
-            u.setPhone_number(data.telefone());
-
-            repository.save(u);
-        } else {
-            throw new UserNotFoundException();
+            user.setPassword(encoder.encode(data.senha()));
         }
+
+        if (!user.getEmail().equals(data.email())
+                && repository.existsByEmail(data.email())) {
+            throw new EmailAlreadyExistsException();
+        }
+
+        if (!user.getPhone_number().equals(data.telefone())
+                && repository.existsByPhoneNumber(data.telefone())) {
+            throw new PhoneNumberAlreadyExistsException();
+        }
+
+        if (!user.getUsername().equals(data.username())
+                && repository.existsByUsername(data.username())) {
+            throw new UsernameAlreadyExistsException();
+        }
+
+        user.setUsername(data.username());
+        user.setName(data.nome());
+        user.setEmail(data.email());
+        user.setProfile(data.foto());
+        user.setPhone_number(data.telefone());
+
+        repository.save(user);
     }
 
     @Override
@@ -93,5 +126,77 @@ public class UserServicesImpl implements UserServices {
         } else {
             throw new UserNotFoundException();
         }
+    }
+
+    @Override
+    public void updateUserRole(String username, UserRoles newRole) {
+
+        User user = repository.findByUsername(username)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (user.getRole() == newRole) {
+            return;
+        }
+
+        if (user.getRole() == UserRoles.ADMIN && newRole == UserRoles.USER) {
+
+            long admins = repository.countByRole(UserRoles.ADMIN);
+
+            if (admins <= 1) {
+                throw new LastAdminException();
+            }
+        }
+
+        user.setRole(newRole);
+        repository.save(user);
+    }
+
+    @Override
+    public List<String> listAdminUsernames() {
+        return repository.findByRole(UserRoles.ADMIN)
+            .stream()
+            .map(User::getUsername)
+            .toList();
+    }
+
+   @Override
+    public void recoverPassword(String email) {
+        User user = (User) repository.findByEmail(email);
+        if (user == null) throw new UserNotFoundException();
+
+        String token = UUID.randomUUID().toString();
+        user.setResetToken(token);
+        user.setTokenExpiration(LocalDateTime.now().plusMinutes(15));
+        repository.save(user);
+
+        String recoveryLink = "http://localhost:3000/reset-password?token=" + token;
+
+        String corpoEmail = "Olá " + user.getName() + ",\n\n" +
+                        "Recebemos uma solicitação para redefinir sua senha.\n" +
+                        "Clique no link abaixo (válido por 15 min):\n" +
+                        recoveryLink + "\n\n" +
+                        "Se não foi você, apenas ignore este e-mail.";
+                        
+        emailService.enviarEmail(user.getEmail(), "Recuperação de Senha", corpoEmail);
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordDTO data) {
+
+        if (data.senha() == null || data.senha().length() < 6) {
+            throw new InvalidPasswordException();
+        }
+
+        User user = repository.findByResetToken(data.token())
+            .orElseThrow(InvalidTokenException::new);
+
+        if (user.getTokenExpiration().isBefore(LocalDateTime.now())) {
+            throw new ExpiredTokenException();
+        }
+
+        user.setPassword(encoder.encode(data.senha()));
+        user.setResetToken(null);
+        user.setTokenExpiration(null);
+        repository.save(user);
     }
 }

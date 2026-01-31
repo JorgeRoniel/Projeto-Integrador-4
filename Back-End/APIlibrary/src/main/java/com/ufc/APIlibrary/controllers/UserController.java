@@ -5,15 +5,20 @@ import com.ufc.APIlibrary.dto.book.ReturnBookShortDTO;
 import com.ufc.APIlibrary.dto.book.WishListDTO;
 import com.ufc.APIlibrary.dto.user.LoginUserDTO;
 import com.ufc.APIlibrary.dto.user.RegisterUserDTO;
+import com.ufc.APIlibrary.dto.user.ResetPasswordDTO;
+import com.ufc.APIlibrary.dto.user.RecoveryRequestDTO;
 import com.ufc.APIlibrary.dto.user.ReturnLoginDTO;
 import com.ufc.APIlibrary.dto.user.UpdateUserDTO;
+import com.ufc.APIlibrary.dto.user.UpdateUserRoleDTO;
 import com.ufc.APIlibrary.services.book.RatingBookService;
 import com.ufc.APIlibrary.services.book.WishListService;
 import com.ufc.APIlibrary.services.user.UserServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -26,6 +31,7 @@ public class UserController {
     private RatingBookService ratingBookService;
     @Autowired
     private WishListService wishListService;
+    
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody RegisterUserDTO data) {
@@ -62,4 +68,31 @@ public class UserController {
         return ResponseEntity.ok(wishListService.listUsersWishes(user_id));
     }
 
+    @PutMapping("/role/{username}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> updateUserRole(
+        @PathVariable String username,
+        @RequestBody UpdateUserRoleDTO data
+    ){
+        services.updateUserRole(username, data.role());
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/admin/usernames")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<String>> listAdminUsernames() {
+        return ResponseEntity.ok(services.listAdminUsernames());
+    }
+
+    @PostMapping("/recover-password")
+    public ResponseEntity<Void> recoverPassword(@RequestBody RecoveryRequestDTO data) {
+        services.recoverPassword(data.email());
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/reset-password-final")
+    public ResponseEntity<Void> resetPasswordFinal(@RequestBody ResetPasswordDTO data) {
+        services.resetPassword(data);
+        return ResponseEntity.ok().build();
+}
 }

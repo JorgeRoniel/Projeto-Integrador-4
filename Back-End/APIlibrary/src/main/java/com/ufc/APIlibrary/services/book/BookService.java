@@ -2,7 +2,7 @@ package com.ufc.APIlibrary.services.book;
 
 import com.ufc.APIlibrary.domain.Book.Book;
 import com.ufc.APIlibrary.dto.book.BookRegisterDTO;
-import com.ufc.APIlibrary.dto.book.ReturnBookLongDTO;
+
 import com.ufc.APIlibrary.dto.book.ReturnBookShortDTO;
 import com.ufc.APIlibrary.dto.book.ReturnCreationBookDTO;
 import org.springframework.data.domain.Page;
@@ -12,7 +12,7 @@ public interface BookService {
 
     Page<ReturnBookShortDTO> listToHome(Pageable pageable);
 
-    ReturnBookLongDTO findBook(Integer id);
+    ReturnBookShortDTO findBook(Integer id, Integer userId);
 
     Book registerBook(BookRegisterDTO data);
 

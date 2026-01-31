@@ -4,4 +4,7 @@ public class PhoneNumberAlreadyExistsException extends RuntimeException {
     public PhoneNumberAlreadyExistsException() {
         super("Este número de telefone já está cadastrado.");
     }
+    public PhoneNumberAlreadyExistsException(String message) {
+        super(message);
+    }
 }

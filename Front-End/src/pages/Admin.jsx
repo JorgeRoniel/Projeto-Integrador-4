@@ -1,19 +1,20 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { Plus, BookPlus, ArrowLeft, Upload, X } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { addBook } from "../services/api";
+import { addBook, getAdminUsernames, updateUserRole } from "../services/api";
 
-function Admin() {
+function Admin({ reloadBooks }) {
     const navigate = useNavigate();
     const { isAdmin, user } = useAuth();
 
     // Redireciona se não for admin
-    if (!isAdmin()) {
-        navigate("/catalogo");
-        return null;
-    }
+    useEffect(() => {
+        if (!isAdmin()) {
+            navigate("/catalogo");
+        }
+    }, [isAdmin, navigate]);
 
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -24,6 +25,8 @@ function Admin() {
         ano: "",
         categoria: "",
         descricao: "",
+        imagemUrl: "",
+        data_aquisicao: "",
     });
     const [errors, setErrors] = useState({});
 
@@ -48,6 +51,15 @@ function Admin() {
         "Aventura",
         "Outros",
     ];
+
+    const [adminUsernames, setAdminUsernames] = useState([]);
+
+    const [roleForm, setRoleForm] = useState({
+        username: "",
+        role: ""
+    });
+
+    const [roleLoading, setRoleLoading] = useState(false);
 
     const handleChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -112,6 +124,8 @@ function Admin() {
             return;
         }
 
+        setFormData((prev) => ({ ...prev, imagemUrl: "" }));
+
         setImagemFile(file);
 
         // Cria preview da imagem
@@ -121,6 +135,44 @@ function Admin() {
         };
         reader.readAsDataURL(file);
     };
+
+    // Busca admins
+    useEffect(() => {
+    const fetchAdmins = async () => {
+        try {
+            const data = await getAdminUsernames();
+            setAdminUsernames(data);
+        } catch (err) {
+            toast.error("Erro ao carregar administradores");
+        }
+    };
+
+    fetchAdmins();
+    }, []);
+
+    // Muda cargo
+    const handleRoleChange = async () => {
+    if (!roleForm.username || !roleForm.role) {
+        toast.error("Preencha o username e selecione o cargo");
+        return;
+    }
+
+    setRoleLoading(true);
+    try {
+        await updateUserRole(roleForm.username, roleForm.role);
+        toast.success("Cargo atualizado com sucesso");
+
+        setRoleForm({ username: "", role: "" });
+
+        // Recarrega lista de admins
+        const data = await getAdminUsernames();
+        setAdminUsernames(data);
+    } catch (err) {
+        toast.error(err.message || "Erro ao atualizar cargo");
+    } finally {
+        setRoleLoading(false);
+    }
+};
 
     // Remove imagem selecionada
     const handleRemoveImage = () => {
@@ -142,7 +194,7 @@ function Admin() {
         try {
             // Converte imagem para bytes se existir
             let imagemBytes = null;
-            if (imagemFile) {
+            if (imagemFile && !formData.imagemUrl) {
                 imagemBytes = await fileToByteArray(imagemFile);
             }
 
@@ -156,9 +208,12 @@ function Admin() {
                 categorias: formData.categoria ? [formData.categoria] : [],
                 descricao: formData.descricao || null,
                 imagem: imagemBytes,
+                imagemUrl: formData.imagemUrl || null,
+                data_aquisicao: formData.data_aquisicao || null,
             };
 
             await addBook(bookData);
+            await reloadBooks();
             toast.success("Livro adicionado com sucesso!");
 
             // Limpa o formulário
@@ -170,6 +225,8 @@ function Admin() {
                 ano: "",
                 categoria: "",
                 descricao: "",
+                imagemUrl: "",
+                data_aquisicao: "",
             });
             setImagemFile(null);
             setImagemPreview(null);
@@ -329,6 +386,21 @@ function Admin() {
                             </div>
                         </div>
 
+                        <div className="flex flex-col gap-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Data de Aquisição</label>
+                            <input
+                                type="date"
+                                name="data_aquisicao"
+                                value={formData.data_aquisicao}
+                                onChange={(e) => handleChange("data_aquisicao", e.target.value)}
+                                disabled={isLoading}
+                                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e] transition-colors disabled:bg-gray-100"
+                                    />
+                            <p className="text-xs text-gray-400">
+                                Deixe em branco para considerar a data de hoje.
+                            </p>
+                        </div>
+
                         {/* Upload de Imagem */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -377,6 +449,34 @@ function Admin() {
                                     </p>
                                 </div>
                             )}
+                        </div>
+                        {/* URL da Imagem (opcional) */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                URL da imagem da capa (opcional)
+                            </label>
+
+                            <input
+                                type="url"
+                                value={formData.imagemUrl}
+                                onChange={(e) => {
+                                    handleChange("imagemUrl", e.target.value);
+
+                                    // Se digitou URL, remove imagem uploadada
+                                    if (e.target.value) {
+                                        setImagemFile(null);
+                                        setImagemPreview(null);
+                                    }
+                                }}
+                                placeholder="https://exemplo.com/capa.jpg"
+                                disabled={isLoading}
+                                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none
+                                        focus:ring-2 focus:ring-[#001b4e] transition-colors disabled:bg-gray-100"
+                            />
+
+                            <p className="text-xs text-gray-500 mt-1">
+                                Se preenchido, o upload de imagem será ignorado.
+                            </p>
                         </div>
 
                         {/* Descrição */}
@@ -428,6 +528,64 @@ function Admin() {
                             </button>
                         </div>
                     </form>
+                </div>
+            <div className="bg-white rounded-2xl shadow-lg p-8 mt-10">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                    🛡️ Administradores do Sistema
+                </h2>
+
+                {adminUsernames.length === 0 ? (
+                 <p className="text-gray-500 text-sm">Nenhum admin encontrado.</p>
+                ) : (
+                <div className="flex flex-wrap gap-2">
+                    {adminUsernames.map((username) => (
+                    <span
+                        key={username}
+                        className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >
+                        {username}
+                    </span>
+                    ))}
+                </div>
+                )}
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-lg p-8 mt-6">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-6">
+                        🔁 Alterar role de usuário
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input
+                            type="text"
+                            placeholder="Username do usuário"
+                            value={roleForm.username}
+                            onChange={(e) =>
+                                setRoleForm((prev) => ({ ...prev, username: e.target.value }))
+                            }
+                            className="rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e]"
+                        />
+
+                        <select
+                            value={roleForm.role}
+                            onChange={(e) =>
+                                setRoleForm((prev) => ({ ...prev, role: e.target.value }))
+                            }
+                            className="rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e] bg-white"
+                        >
+                            <option value="">Selecione a role</option>
+                            <option value="USER">USER</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+
+                        <button
+                            onClick={handleRoleChange}
+                            disabled={roleLoading}
+                            className="bg-[#001b4e] text-white rounded-xl font-bold px-6 py-3 hover:bg-[#002a6e] transition disabled:bg-gray-400"
+                        >
+                            {roleLoading ? "Atualizando..." : "Atualizar role"}
+                     </button>
+                    </div>
                 </div>
             </div>
         </div>

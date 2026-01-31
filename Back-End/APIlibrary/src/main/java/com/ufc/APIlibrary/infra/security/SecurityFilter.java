@@ -56,6 +56,8 @@ public class SecurityFilter extends OncePerRequestFilter {
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/api/user/login")
                 || path.startsWith("/api/user/register")
+                || path.startsWith("/api/user/recover-password")
+                || path.startsWith("/api/user/reset-password-final")
                 || request.getMethod().equalsIgnoreCase("OPTIONS");
     }
 
