@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -17,40 +17,54 @@ import {
   getUserRatings,
   checkNotifications,
   updateNotificationStatus,
+  getWeeklyHighlights,
+  getRecommendations,
+  deleteBook,
 } from "./services/api";
 import { useAuth } from "./contexts/AuthContext";
 
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Estado para armazenar os livros reais da API
-  const [livros, setLivros] = useState([]);
+  const [highlights, setHighlights] = useState([]);
+  const [Recomendation, setRecomendation] = useState([]);
+
   const [isLoadingBooks, setIsLoadingBooks] = useState(true);
 
-  // Armazenamos os livros adicionados na lista de desejo
   const [wishlist, setWishlist] = useState([]);
 
-  // Armazenamos os livros em "Meus Livros"
   const [meusLivros, setMeusLivros] = useState([]);
 
-  // Busca os livros ao montar o componente
-  useEffect(() => {
-    loadBooks();
-  }, []);
+  const [cacheBusca, setCacheBusca] = useState({
+    query: "",
+    resultados: [],
+    pagina: 0,
+    temMais: true,
+    scrollPos: 0
+  });
 
-  const loadBooks = async () => {
-  try {
-    setIsLoadingBooks(true);
-    const data = await listBooks(0, 50);
-    setLivros(data.content || data || []);
+  const loadCatalogoData = async () => {
+    try {
+      setIsLoadingBooks(true);
+      const [resHighlights, resRecs] = await Promise.all([
+       getWeeklyHighlights(),
+      getRecommendations(user?.id || 0, 0, 5) 
+    ]);
+
+    setHighlights(resHighlights || []);
+    setRecomendation(resRecs?.content || resRecs || []);
   } catch (error) {
-    console.error("Erro ao carregar livros:", error);
-    toast.error("Não foi possível carregar o catálogo.");
+    console.error("Erro ao carregar dados do catálogo:", error);
   } finally {
     setIsLoadingBooks(false);
   }
 };
+
+useEffect(() => {
+  loadCatalogoData();
+}, [user?.id]);
 
 // Novo useEffect para verificar notificações de disponibilidade
   useEffect(() => {
@@ -115,7 +129,7 @@ function App() {
             avaliacao:
               book.nota !== undefined && book.nota !== null  && book.nota !== -1
                 ? Number(book.nota)
-                : book.rating || 0,
+                : -1,
           }));
           setMeusLivros(formatted);
         } catch (error) {
@@ -133,6 +147,7 @@ function App() {
   const adicionarAListaDesejo = async (livro) => {
     if (!user) {
       toast.error("Faça login para adicionar à lista de desejos!");
+      navigate("/login", { state: { from: location.pathname } });
       return;
     }
 
@@ -170,14 +185,15 @@ function App() {
   };
 
 const handleToggleNotification = async (livro) => {
-  if (!user?.id) return;
+     if (!user) {
+      toast.error("Faça login para mudar sua notificação!");
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
 
   if (livro.data_aquisicao) {
-    // O replace garante que o JS não mude o dia por causa do fuso.
-    const dataAquisicao = new Date(livro.data_aquisicao.replace(/-/g, '\/'));
-    dataAquisicao.setHours(0, 0, 0, 0);
+    const dataAquisicao = new Date(livro.data_aquisicao);
     const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
 
     if (hoje >= dataAquisicao) {
       toast(`O livro "${livro.titulo}" já está disponível na biblioteca!`, {
@@ -186,6 +202,7 @@ const handleToggleNotification = async (livro) => {
       return;
     }
   }
+
   const novoStatus = !livro.notificacao;
 
   try {
@@ -214,7 +231,12 @@ const handleToggleNotification = async (livro) => {
 
   // Função para remover um livro da lista de desejo
   const removerDaListaDesejo = async (id) => {
-    if (!user) return;
+      if (!user) {
+        toast.error("Faça login para remover da lista de desejos!");
+        navigate("/login", { state: { from: location.pathname } });
+        return;
+    }
+
     try {
       await removeFromWishlist(Number(user.id), Number(id));
       setWishlist((prev) =>
@@ -229,16 +251,16 @@ const handleToggleNotification = async (livro) => {
 
   // Função para adicionar um livro a "Meus Livros"
   const adicionarAMeusLivros = async (livro) => {
-    if (!user) {
-      toast.error("Faça login para salvar seus livros!");
+     if (!user) {
+      toast.error("Faça login para adicionar a seus livros!");
+      navigate("/login", { state: { from: location.pathname } });
       return;
     }
 
+
     if (livro.data_aquisicao) {
-        const dataAquisicao = new Date(livro.data_aquisicao.replace(/-/g, '\/'));
+        const dataAquisicao = new Date(livro.data_aquisicao);
         const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-        dataAquisicao.setHours(0,0,0,0);
 
         if (hoje < dataAquisicao) {
             toast.error("Este livro ainda não chegou na biblioteca. Adicione à Lista de Desejos para ser avisado!");
@@ -265,12 +287,17 @@ const handleToggleNotification = async (livro) => {
 
   // Função para mover livro da lista de desejos para "Meus Livros"
   const moverParaMeusLivros = async (livro) => {
+     if (!user) {
+      toast.error("Faça login para mover para seus livros!");
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+
     const bookId = Number(livro.id);
     const userId = Number(user.id);
     if (!meusLivros.find((item) => Number(item.id) === bookId)) {
       try {
         await rateBook(bookId, userId, -1);
-        await removeFromWishlist(userId, bookId);
 
         const livroComAvaliacao = { ...livro, id: bookId, avaliacao: -1 };
         setMeusLivros((prev) => [...prev, livroComAvaliacao]);
@@ -281,12 +308,28 @@ const handleToggleNotification = async (livro) => {
         toast.success(`"${livro.titulo}" movido para Meus Livros!`);
       } catch (error) {
         console.error("Erro ao mover:", error);
-        toast.error("Erro ao mover para Meus Livros.");
+        toast.error(error.message);
       }
     } else {
       toast.error("Este livro já está em Meus Livros!");
     }
   };
+
+  const handleDeletarLivro = async (id) => {
+  try {
+    await deleteBook(id); 
+    
+    // Remove o livro de todas as listas locais para manter o sync
+    setHighlights(prev => prev.filter(l => l.id !== id));
+    // Se tiver outras listas globais, filtre-as aqui também
+    
+    toast.success("Livro removido permanentemente!");
+    navigate("/catalogo"); // Redireciona após deletar
+  } catch (error) {
+    console.error("Erro ao deletar:", error);
+    toast.error("Não foi possível excluir o livro.");
+  }
+};
 
   // Função para atualizar avaliação de um livro em "Meus Livros"
   const atualizarAvaliacaoLivro = async (
@@ -294,7 +337,7 @@ const handleToggleNotification = async (livro) => {
     avaliacao,
     comentario = "",
   ) => {
-    if (!user) return;
+    if (!user) return null;
     const bId = Number(livroId);
     const uId = Number(user.id);
     try {
@@ -302,14 +345,22 @@ const handleToggleNotification = async (livro) => {
       setMeusLivros((prevLivros) =>
         prevLivros.map((livro) =>
           Number(livro.id) === bId
-            ? { ...livro, id: bId, avaliacao, comentario }
-            : livro,
+            ? { 
+          ...livro, 
+          id: bId, 
+          avaliacao: Number(avaliacao), 
+          comentario: comentario,
+          descricao: comentario 
+        }
+      : livro
         ),
       );
       toast.success("Avaliação salva com sucesso!");
+      return avaliacao;
     } catch (error) {
       console.error("Erro ao salvar avaliação:", error);
       toast.error("Erro ao salvar avaliação.");
+      throw error;
     }
   };
 
@@ -346,9 +397,14 @@ const handleToggleNotification = async (livro) => {
               atualizarAvaliacaoLivro={atualizarAvaliacaoLivro}
               logoEscura={logoEscura}
               logoClara={logoClara}
-              livros={livros}
-              reloadBooks={loadBooks}
               handleToggleNotification={handleToggleNotification}
+              highlights={highlights}
+              Recomendation={Recomendation}
+              listBooks={listBooks}
+              refreshCatalogo={loadCatalogoData}
+              cacheBusca={cacheBusca}
+              setCacheBusca={setCacheBusca}
+              handleDeletarLivro={handleDeletarLivro}
             />
           </main>
         </div>
@@ -367,9 +423,14 @@ const handleToggleNotification = async (livro) => {
           atualizarAvaliacaoLivro={atualizarAvaliacaoLivro}
           logoEscura={logoEscura}
           logoClara={logoClara}
-          livros={livros}
-          reloadBooks={loadBooks}
           handleToggleNotification={handleToggleNotification}
+          highlights={highlights}
+          Recomendation={Recomendation}
+          listBooks={listBooks}
+          refreshCatalogo={loadCatalogoData}
+          cacheBusca={cacheBusca}
+          setCacheBusca={setCacheBusca}
+          handleDeletarLivro={handleDeletarLivro}
         />
       )}
     </div>

@@ -24,9 +24,14 @@ function AppRoutes({
   atualizarAvaliacaoLivro,
   logoEscura,
   logoClara,
-  livros,
-  reloadBooks,
   handleToggleNotification,
+  highlights,
+  Recomendation,
+  listBooks,
+  refreshCatalogo,
+  cacheBusca,
+  setCacheBusca,
+  handleDeletarLivro
 }) {
   return (
     <Routes>
@@ -50,11 +55,15 @@ function AppRoutes({
         path="/catalogo"
         element={
           <Catalogo
-            livros={livros}
+            highlights={highlights}
+            Recomendation={Recomendation}
+            listBooks={listBooks}
             onAddWishlist={adicionarAListaDesejo}
             onAddMeusLivros={adicionarAMeusLivros}
             wishlist={wishlist}
             meusLivros={meusLivros}
+            cacheBusca={cacheBusca}
+            setCacheBusca={setCacheBusca}
           />
         }
       />
@@ -62,11 +71,11 @@ function AppRoutes({
         path="/livro/:id"
         element={
           <DetalhesLivro
-            livros={livros}
             wishlist={wishlist}
             onAddWishlist={adicionarAListaDesejo}
             onAddMeusLivros={adicionarAMeusLivros}
             meusLivros={meusLivros}
+            handleDeletarLivro={handleDeletarLivro}
           />
         }
       />
@@ -95,7 +104,7 @@ function AppRoutes({
       <Route path="/perfil" element={<Perfil />} />
       <Route
       path="/admin"
-      element={<Admin reloadBooks={reloadBooks} />}
+      element={<Admin onBookAdded={refreshCatalogo} />}
       />
       <Route path="/" element={<Navigate to="/login" replace />} />
 

@@ -14,11 +14,9 @@ function MeusLivros({ meusLivros, setMeusLivros, atualizarAvaliacaoLivro }) {
   // Abrir modal correto baseado se livro já tem avaliação
   const handleClickLivro = (livro) => {
     setLivroSelecionado(livro);
-    if (livro.avaliacao && livro.avaliacao !== -1) {
-      // Livro já tem avaliação - abrir modal de visualização
+    if (livro.avaliacao !== null && livro.avaliacao !== undefined && livro.avaliacao !== -1) {
       setModalVisualizarAberto(true);
     } else {
-      // Livro não tem avaliação - abrir modal para criar
       setModoEdicao(false);
       setModalAvaliacaoAberto(true);
     }
@@ -45,13 +43,15 @@ function MeusLivros({ meusLivros, setMeusLivros, atualizarAvaliacaoLivro }) {
     setModalAvaliacaoAberto(true);
   };
 
-  // Submeter avaliação (criar ou editar)
-  const handleSubmitAvaliacao = (dados) => {
-    // Chama a função global que trata o estado central e a API
-    atualizarAvaliacaoLivro(dados.livroId, dados.rating, dados.comentario);
-
+const handleSubmitAvaliacao = async (dados) => {
+  try {
+    const res = await atualizarAvaliacaoLivro(dados.livroId, dados.rating, dados.comentario);
     fecharModalAvaliacao();
-  };
+    return res; 
+  } catch (err) {
+    throw err; 
+  }
+};
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -73,7 +73,7 @@ function MeusLivros({ meusLivros, setMeusLivros, atualizarAvaliacaoLivro }) {
               onClick={() => handleClickLivro(livro)}
               className="cursor-pointer transition-transform hover:scale-105"
             >
-              <BookCard livro={livro} showRating={true} rating={livro.avaliacao} />
+              <BookCard livro={livro} showRating={livro?.avaliacao != -1 ? true : false} rating={livro.avaliacao} />
             </div>
           ))}
         </div>

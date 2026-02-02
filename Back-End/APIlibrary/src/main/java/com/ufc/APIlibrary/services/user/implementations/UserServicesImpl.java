@@ -7,7 +7,6 @@ import com.ufc.APIlibrary.dto.user.RegisterUserDTO;
 import com.ufc.APIlibrary.dto.user.ResetPasswordDTO;
 import com.ufc.APIlibrary.dto.user.ReturnLoginDTO;
 import com.ufc.APIlibrary.dto.user.UpdateUserDTO;
-import com.ufc.APIlibrary.infra.exceptions.user.ExpiredTokenException;
 import com.ufc.APIlibrary.infra.exceptions.user.InvalidPasswordException;
 import com.ufc.APIlibrary.infra.exceptions.user.InvalidTokenException;
 import com.ufc.APIlibrary.infra.exceptions.user.LastAdminException;
@@ -27,9 +26,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
-import java.util.UUID;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -164,10 +160,7 @@ public class UserServicesImpl implements UserServices {
         User user = (User) repository.findByEmail(email);
         if (user == null) throw new UserNotFoundException();
 
-        String token = UUID.randomUUID().toString();
-        user.setResetToken(token);
-        user.setTokenExpiration(LocalDateTime.now().plusMinutes(15));
-        repository.save(user);
+        String token = tokenService.generatePasswordRecoveryToken(user);
 
         String recoveryLink = "http://localhost:3000/reset-password?token=" + token;
 
@@ -178,25 +171,26 @@ public class UserServicesImpl implements UserServices {
                         "Se não foi você, apenas ignore este e-mail.";
                         
         emailService.enviarEmail(user.getEmail(), "Recuperação de Senha", corpoEmail);
-    }
+    
+}
 
     @Override
     public void resetPassword(ResetPasswordDTO data) {
-
         if (data.senha() == null || data.senha().length() < 6) {
             throw new InvalidPasswordException();
         }
 
-        User user = repository.findByResetToken(data.token())
-            .orElseThrow(InvalidTokenException::new);
+        String subject = tokenService.validateToken(data.token(), "password_recovery");
 
-        if (user.getTokenExpiration().isBefore(LocalDateTime.now())) {
-            throw new ExpiredTokenException();
+        if (subject.isEmpty()) {
+            throw new InvalidTokenException(); 
         }
 
+        Integer userId = Integer.parseInt(subject);
+        User user = repository.findById(userId)
+            .orElseThrow(UserNotFoundException::new);
+
         user.setPassword(encoder.encode(data.senha()));
-        user.setResetToken(null);
-        user.setTokenExpiration(null);
         repository.save(user);
     }
 }

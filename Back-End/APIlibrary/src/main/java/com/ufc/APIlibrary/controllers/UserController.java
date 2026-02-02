@@ -20,6 +20,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 @RestController
@@ -34,7 +36,7 @@ public class UserController {
     
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody RegisterUserDTO data) {
+    public ResponseEntity<Void> register(@RequestBody @Valid RegisterUserDTO data) {
         User u = services.register(data);
         if (u == null)
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -42,12 +44,12 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ReturnLoginDTO> login(@RequestBody LoginUserDTO data) {
+    public ResponseEntity<ReturnLoginDTO> login(@RequestBody @Valid LoginUserDTO data) {
         return ResponseEntity.status(HttpStatus.OK).body(services.login(data));
     }
 
     @PutMapping("/{id}/update")
-    public ResponseEntity<Void> updateUserRoute(@PathVariable("id") Integer user_id, @RequestBody UpdateUserDTO data) {
+    public ResponseEntity<Void> updateUserRoute(@PathVariable("id") Integer user_id, @RequestBody @Valid UpdateUserDTO data) {
         services.updateUser(user_id, data);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
@@ -85,7 +87,7 @@ public class UserController {
     }
 
     @PostMapping("/recover-password")
-    public ResponseEntity<Void> recoverPassword(@RequestBody RecoveryRequestDTO data) {
+    public ResponseEntity<Void> recoverPassword(@RequestBody @Valid RecoveryRequestDTO data) {
         services.recoverPassword(data.email());
         return ResponseEntity.ok().build();
     }

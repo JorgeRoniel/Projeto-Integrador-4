@@ -5,8 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -16,6 +18,8 @@ public interface BookRatingRepository extends JpaRepository<BookRating, Integer>
     List<BookRating> findByUserId(Integer UserId);
 
     BookRating findByUserIdAndBookId(Integer userId, Integer bookId);
+
+    Page<BookRating> findByBookIdAndRatingGreaterThanEqual(Integer bookId, Integer minRating, Pageable pageable);
 
     @Query("""
             SELECT COUNT(r)
@@ -43,42 +47,42 @@ public interface BookRatingRepository extends JpaRepository<BookRating, Integer>
                 SELECT COUNT(r)
                 FROM BookRating r
                 WHERE r.user.id = :userId
-                AND r.date_review BETWEEN :start AND :end
+                AND r.dateReview BETWEEN :start AND :end
             """)
     Integer countBooksReadBetween(
             @Param("userId") Integer userId,
-            @Param("start") LocalDate start,
-            @Param("end") LocalDate end);
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
 
-    // Top 5 autores mais bem avaliados
+   // Top autores
     @Query("""
-                SELECT r.book.author, AVG(r.rating)
-                FROM BookRating r
-                WHERE r.user.id = :userId AND r.rating <> -1
-                GROUP BY r.book.author
-                ORDER BY AVG(r.rating) DESC
-            """)
-    List<Object[]> findTopAuthorsByUser(@Param("userId") Integer userId);
+            SELECT r.book.author, AVG(r.rating)
+            FROM BookRating r
+            WHERE r.user.id = :userId AND r.rating <> -1
+            GROUP BY r.book.author
+            ORDER BY AVG(r.rating) DESC
+        """)
+    List<Object[]> findTopAuthorsByUser(@Param("userId") Integer userId, Pageable pageable);
 
-    // Top 5 categorias mais bem avaliadas
+    // Top categorias avaliadas
     @Query("""
-                SELECT c, AVG(r.rating)
-                FROM BookRating r
-                JOIN r.book.category c
-                WHERE r.user.id = :userId AND r.rating <> -1
-                GROUP BY c
-                ORDER BY AVG(r.rating) DESC
-            """)
-    List<Object[]> findTopCategoriesByUser(@Param("userId") Integer userId);
+            SELECT c, AVG(r.rating)
+            FROM BookRating r
+            JOIN r.book.category c
+            WHERE r.user.id = :userId AND r.rating <> -1
+            GROUP BY c
+            ORDER BY AVG(r.rating) DESC
+        """)
+    List<Object[]> findTopCategoriesByUser(@Param("userId") Integer userId, Pageable pageable);
 
-    // Top 5 categorias mais lidas
+    // Categorias mais lidas
     @Query("""
-                SELECT c, COUNT(r)
-                FROM BookRating r
-                JOIN r.book.category c
-                WHERE r.user.id = :userId
-                GROUP BY c
-                ORDER BY COUNT(r) DESC
-            """)
-    List<Object[]> findMostReadCategoriesByUser(@Param("userId") Integer userId);
+            SELECT c, COUNT(r)
+            FROM BookRating r
+            JOIN r.book.category c
+            WHERE r.user.id = :userId
+            GROUP BY c
+            ORDER BY COUNT(r) DESC
+        """)
+    List<Object[]> findMostReadCategoriesByUser(@Param("userId") Integer userId, Pageable pageable);
 }

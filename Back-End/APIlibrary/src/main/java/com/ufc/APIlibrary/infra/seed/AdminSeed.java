@@ -3,6 +3,8 @@ package com.ufc.APIlibrary.infra.seed;
 import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.domain.User.UserRoles;
 import com.ufc.APIlibrary.repositories.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,13 +23,11 @@ public class AdminSeed {
     @Value("${admin.username}")
     private String username;
 
-    private final UserRepository repository;
-    private final PasswordEncoder encoder;
+    @Autowired
+    private UserRepository repository;
 
-    public AdminSeed(UserRepository repository, PasswordEncoder encoder) {
-        this.repository = repository;
-        this.encoder = encoder;
-    }
+    @Autowired
+    private PasswordEncoder encoder;
 
     @EventListener(ApplicationReadyEvent.class)
     public void createAdminIfNotExists() {

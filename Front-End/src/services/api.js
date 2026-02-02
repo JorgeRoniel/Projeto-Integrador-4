@@ -26,6 +26,18 @@ async function fetchAPI(endpoint, options = {}) {
   try {
     const response = await fetch(url, config);
 
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("library_user");
+      
+      // Criamos um evento customizado para o App perceber o logout
+      window.dispatchEvent(new Event("auth-expired"));
+      
+      // Redireciona com um parâmetro para avisar o Login
+      window.location.href = "/login?expired=true";
+      return;
+    }
+
     // Se a resposta não tiver conteúdo (204 No Content ou 201 Created sem body)
     if (response.status === 204 || response.status === 201) {
       return { success: true, status: response.status };
@@ -179,9 +191,10 @@ export async function updateUserRole(username, role) {
  * @param {number} [size=12] - Tamanho da página
  * @returns {Promise<Object>}
  */
-export async function listBooks(page = 0, size = 12) {
-  return fetchAPI(`/api/book?page=${page}&size=${size}`, {
-    method: "GET",
+export async function listBooks(search = "", page = 0, size = 20) {
+  const searchQuery = search ? `&search=${encodeURIComponent(search)}` : "";
+  return fetchAPI(`/api/book?page=${page}&size=${size}${searchQuery}`, { 
+    method: "GET" 
   });
 }
 
@@ -196,14 +209,43 @@ export async function getBook(bookId, userId) {
   return fetchAPI(url, { method: "GET" });
 }
 
+// Busca os destaques da semana (Lista fixa)
+export async function getWeeklyHighlights() {
+  return fetchAPI("/api/book/highlights", { method: "GET" });
+}
+
 /**
- * Pesquisa livros por título, autor ou categoria
- * @param {string} query - Termo de busca
- * @returns {Promise<Array>}
+ * Lista avaliações de um livro de forma paginada
+ * @param {number} userId - ID do usuário
+ * @param {number} [page=0] - Página atual
+ * @param {number} [size=5] - Quantidade por página
+ * @returns {Promise<Object>} - Retorna o objeto Page do Spring
  */
-export async function searchBooks(query) {
-  return fetchAPI(`/api/book/search?query=${encodeURIComponent(query)}`, {
+export async function getRecommendations(userId, page = 0, size = 5) {
+  return fetchAPI(`/api/book/recommendations/${userId}?page=${page}&size=${size}`, { 
+    method: "GET" 
+  });
+}
+
+/**
+ * Busca livros relacionados baseados no autor e categorias do livro atual
+ * @param {number} bookId - ID do livro de referência
+ * @returns {Promise<Array>} - Lista de livros relacionados
+ */
+export async function getRelatedBooks(bookId) {
+  return fetchAPI(`/api/book/${bookId}/related`, {
     method: "GET",
+  });
+}
+
+export async function deleteBook(bookId) {
+  return fetchAPI(`/api/book/${bookId}/delete`, { method: "DELETE" });
+}
+
+export async function updateBook(bookId, bookData) {
+  return fetchAPI(`/api/book/${bookId}/update`, { 
+    method: "PUT", 
+    body: JSON.stringify(bookData) 
   });
 }
 
@@ -245,12 +287,14 @@ export async function rateBook(bookId, userId, nota, comentario = "") {
 }
 
 /**
- * Lista avaliações de um livro
+ * Lista avaliações de um livro de forma paginada
  * @param {number} bookId - ID do livro
- * @returns {Promise<Array>}
+ * @param {number} [page=0] - Página atual
+ * @param {number} [size=10] - Quantidade por página
+ * @returns {Promise<Object>} - Retorna o objeto Page do Spring
  */
-export async function getBookRatings(bookId) {
-  return fetchAPI(`/api/book/${bookId}/rating`, {
+export async function getBookRatings(bookId, page = 0, size = 10) {
+  return fetchAPI(`/api/book/${bookId}/rating?page=${page}&size=${size}`, {
     method: "GET",
   });
 }
@@ -347,7 +391,6 @@ export default {
   deleteUser,
   listBooks,
   getBook,
-  searchBooks,
   addBook,
   rateBook,
   getBookRatings,
@@ -362,4 +405,8 @@ export default {
   updateNotificationStatus,
   recoverPassword,
   resetPasswordFinal,
+  getWeeklyHighlights,
+  getRecommendations,
+  getRelatedBooks,
+  deleteBook
 };

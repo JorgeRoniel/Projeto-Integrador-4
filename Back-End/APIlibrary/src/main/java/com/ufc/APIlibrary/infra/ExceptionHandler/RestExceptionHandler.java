@@ -2,6 +2,7 @@ package com.ufc.APIlibrary.infra.ExceptionHandler;
 
 import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.book.InvalidRatingException;
+import com.ufc.APIlibrary.infra.exceptions.book.IsbnAlreadyExistsException;
 import com.ufc.APIlibrary.infra.exceptions.book.WishListAlreadyExistsException;
 import com.ufc.APIlibrary.infra.exceptions.user.ExpiredTokenException;
 import com.ufc.APIlibrary.infra.exceptions.user.InvalidPasswordException;
@@ -12,9 +13,11 @@ import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.WishListNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.EmailAlreadyExistsException;
 import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.PhoneNumberAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.book.BookNotAvailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -32,6 +35,20 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<FormaterRestException> phoneAlreadyExists(PhoneNumberAlreadyExistsException exception) {
         FormaterRestException response = new FormaterRestException(HttpStatus.CONFLICT, exception.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+     // TRATAMENTO DE EXCESSÕES ACERCA DAS VALIDAÇÕES DOS DTO'S
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+        MethodArgumentNotValidException ex, 
+        org.springframework.http.HttpHeaders headers, 
+        org.springframework.http.HttpStatusCode status, 
+        org.springframework.web.context.request.WebRequest request) {
+        
+        String errorMessage = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        FormaterRestException response = new FormaterRestException(HttpStatus.BAD_REQUEST, errorMessage);
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     // TRATAMENTO DE EXCESSÕES ACERCA DAS FUNÇÕES DO CONTROLLER 'USERCONTROLLER'
@@ -81,6 +98,18 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     // TRATAMENTO DE EXCESSÕES ACERCA DAS FUNÇÕES DO CONTROLLER 'BOOKCONTROLLER'
 
+    @ExceptionHandler(IsbnAlreadyExistsException.class)
+    public ResponseEntity<FormaterRestException> isbnAlreadyExistsHandler(IsbnAlreadyExistsException exception) {
+        FormaterRestException response = new FormaterRestException(HttpStatus.CONFLICT, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(BookNotAvailableException.class)
+    public ResponseEntity<FormaterRestException> bookNotAvailableHandler(BookNotAvailableException exception) {
+        FormaterRestException response = new FormaterRestException(HttpStatus.BAD_REQUEST, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(BookNotFoundException.class)
     public ResponseEntity<FormaterRestException> bookNotFound(BookNotFoundException ex) {
         FormaterRestException response = new FormaterRestException(HttpStatus.NOT_FOUND, ex.getMessage());
@@ -111,8 +140,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ExpiredTokenException.class)
     public ResponseEntity<FormaterRestException> expiredTokenHandler(ExpiredTokenException exception) {
-        FormaterRestException response = new FormaterRestException(HttpStatus.GONE, exception.getMessage());
-        return ResponseEntity.status(HttpStatus.GONE).body(response);
+        FormaterRestException response = new FormaterRestException(HttpStatus.UNAUTHORIZED, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
 }

@@ -1,6 +1,6 @@
 package com.ufc.APIlibrary.dto.book;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-public record ReturnRatingBookDTO(String username, byte[] fotoDePerfil, Integer nota, String comentario, LocalDate dataComentario) {
+public record ReturnRatingBookDTO(Integer id, String username, byte[] fotoDePerfil, Integer nota, String comentario, LocalDateTime dataComentario) {
 }

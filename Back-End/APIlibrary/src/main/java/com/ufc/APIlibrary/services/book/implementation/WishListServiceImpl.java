@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -50,7 +50,7 @@ public class WishListServiceImpl implements WishListService {
 
         WishList newWish = new WishList(user, book);
 
-        if (book.getAcquision_date() != null && book.getAcquision_date().isAfter(LocalDate.now())) {
+        if (book.getAcquision_date() != null && book.getAcquision_date().isAfter(LocalDateTime.now())) {
             newWish.setNotification(true);
         }
 
@@ -110,12 +110,12 @@ public class WishListServiceImpl implements WishListService {
     List<WishList> items = repository.findAllByUserIdAndNotificationTrue(userId);
     
     List<NotificationResponseDTO> notifications = new ArrayList<>();
-    LocalDate hoje = LocalDate.now();
+    LocalDateTime agora = LocalDateTime.now();
 
     for (WishList wl : items) {
 
-        if (wl.getBook().getAcquision_date().isBefore(hoje) || 
-            wl.getBook().getAcquision_date().isEqual(hoje)) {
+        if (wl.getBook().getAcquision_date().isBefore(agora) || 
+            wl.getBook().getAcquision_date().isEqual(agora)) {
             
             notifications.add(new NotificationResponseDTO(
                 wl.getBook().getId(), 
@@ -128,7 +128,7 @@ public class WishListServiceImpl implements WishListService {
     }
     
     return notifications;
-}
+    }
 
     @Override
     public void removeFromWishList(DatasForWishListDTO data) {

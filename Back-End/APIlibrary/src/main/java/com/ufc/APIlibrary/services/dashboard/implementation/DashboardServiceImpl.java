@@ -6,10 +6,13 @@ import com.ufc.APIlibrary.repositories.BookRatingRepository;
 import com.ufc.APIlibrary.repositories.WishListRepository;
 import com.ufc.APIlibrary.services.dashboard.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -24,10 +27,11 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public DashboardResponseDTO getDashboard(Integer userId) {
 
-        LocalDate now = LocalDate.now();
-        LocalDate startOfMonth = now.withDayOfMonth(1);
-        LocalDate startOfLastMonth = startOfMonth.minusMonths(1);
-        LocalDate startOfYear = now.withDayOfYear(1);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime startOfLastMonth = startOfMonth.minusMonths(1);
+        LocalDateTime endOfLastMonth = startOfMonth.minusNanos(1);
+        LocalDateTime startOfYear = now.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS);
 
         // Wishlist
         Integer wishlistCount =
@@ -49,45 +53,47 @@ public class DashboardServiceImpl implements DashboardService {
                 bookRatingRepository.countBooksReadBetween(
                         userId,
                         startOfLastMonth,
-                        startOfMonth.minusDays(1)
+                        endOfLastMonth
                 );
 
         Integer booksThisYear =
                 bookRatingRepository.countBooksReadBetween(
                         userId, startOfYear, now);
 
+        Pageable topFive = PageRequest.of(0, 5);
+
         //  Rankings
          //  Top autores
         List<TopAuthorDTO> topAuthors =
-                bookRatingRepository.findTopAuthorsByUser(userId)
-                        .stream()
-                        .map(obj -> new TopAuthorDTO(
-                                (String) obj[0],
-                                (Double) obj[1]
-                        ))
-                        .toList();
+                bookRatingRepository.findTopAuthorsByUser(userId, topFive)
+                .stream()
+                .map(obj -> new TopAuthorDTO(
+                        (String) obj[0],
+                        (Double) obj[1]
+                ))
+                .toList();
 
-        //  Categorias melhor avaliadas
+        // Categorias melhor avaliadas
         List<TopCategoryDTO> topRatedCategories =
-                bookRatingRepository.findTopCategoriesByUser(userId)
-                        .stream()
-                        .map(obj -> new TopCategoryDTO(
-                                (String) obj[0],
-                                (Double) obj[1],
-                                null
-                        ))
-                        .toList();
+                bookRatingRepository.findTopCategoriesByUser(userId, topFive) 
+                .stream()
+                .map(obj -> new TopCategoryDTO(
+                        (String) obj[0],
+                        (Double) obj[1],
+                        null
+                ))
+                .toList();
 
-        //  Categorias mais lidas
+        // Categorias mais lidas
         List<TopCategoryDTO> mostReadCategories =
-                bookRatingRepository.findMostReadCategoriesByUser(userId)
-                        .stream()
-                        .map(obj -> new TopCategoryDTO(
-                                (String) obj[0],
-                                null,
-                                (Long) obj[1]
-                        ))
-                        .toList();
+        bookRatingRepository.findMostReadCategoriesByUser(userId, topFive) 
+                .stream()
+                .map(obj -> new TopCategoryDTO(
+                        (String) obj[0],
+                        null,
+                        (Long) obj[1]
+                ))
+                .toList();
 
         return new DashboardResponseDTO(
                 wishlistCount,

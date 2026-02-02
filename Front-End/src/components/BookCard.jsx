@@ -46,7 +46,7 @@ function BookCard({
             </div>
 
             {/* Avaliação */}
-            {showRating && (
+            {(showRating === true) && (
                 <div className="flex justify-center">
                     <StarRating rating={rating ?? livro.avaliacao} />
                 </div>

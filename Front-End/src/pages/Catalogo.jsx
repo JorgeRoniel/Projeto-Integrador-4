@@ -1,12 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, BookOpen, ChevronRight, Search, X } from "lucide-react";
-import { searchBooks } from "../services/api";
 import BookCard from "../components/BookCard";
 
 // Componente de Menu de Ações
 const ActionMenu = ({ livro, onAddWishlist, onAddMeusLivros, wishlist, meusLivros }) => {
-  const [menuAberto, setMenuAberto] = useState(false);
 
   const isWishlisted = wishlist?.some(item => Number(item.id) === Number(livro.id));
   const isMyBook = meusLivros?.some(item => Number(item.id) === Number(livro.id));
@@ -15,8 +13,6 @@ const ActionMenu = ({ livro, onAddWishlist, onAddMeusLivros, wishlist, meusLivro
     <div className="relative">
       <div
         className="flex gap-2"
-        onMouseEnter={() => setMenuAberto(true)}
-        onMouseLeave={() => setMenuAberto(false)}
       >
         {/* Botão Lista de Desejos */}
         <button
@@ -54,173 +50,270 @@ const ActionMenu = ({ livro, onAddWishlist, onAddMeusLivros, wishlist, meusLivro
   );
 };
 
-function Catalogo({ livros: initialLivros, onAddWishlist, onAddMeusLivros, wishlist, meusLivros }) {
+function Catalogo({ highlights, 
+  Recomendation, 
+  listBooks, 
+  onAddWishlist, 
+  onAddMeusLivros, 
+  wishlist, 
+  meusLivros,
+  cacheBusca,
+  setCacheBusca}) {
   const navigate = useNavigate();
-  const [livros, setLivros] = React.useState(initialLivros);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [isSearching, setIsSearching] = React.useState(false);
+  const [livrosBusca, setLivrosBusca] = useState(cacheBusca.resultados);
+  const [searchQuery, setSearchQuery] = useState(cacheBusca.query);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Debounce para busca em tempo real
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchQuery.trim()) {
-        performSearch();
-      } else {
-        setLivros(initialLivros);
+  const [page, setPage] = useState(cacheBusca.pagina);
+  const [hasMore, setHasMore] = useState(cacheBusca.temMais);
+  const observer = useRef();
+
+  const lastBookElementRef = useCallback(node => {
+    if (isSearching) return;
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
       }
-    }, 500); // esperas 500ms após o último caractere digitado
+    });
+    
+    if (node) observer.current.observe(node);
+  }, [isSearching, hasMore]);
 
-    return () => clearTimeout(timer);
-  }, [searchQuery, initialLivros]);
+  useEffect(() => {
+    setCacheBusca(prev => ({
+      ...prev,
+      query: searchQuery,
+      resultados: livrosBusca,
+      pagina: page,
+      temMais: hasMore
+    }));
+  }, [searchQuery, livrosBusca, page, hasMore]);
 
-  const performSearch = async () => {
-    try {
-      setIsSearching(true);
-      const results = await searchBooks(searchQuery);
-      setLivros(results || []);
-    } catch (error) {
-      console.error("Erro na busca:", error);
-      setLivros([]);
-    } finally {
-      setIsSearching(false);
+  useEffect(() => {
+    if (livrosBusca.length > 0 && cacheBusca.scrollPos > 0) {
+      const timer = setTimeout(() => {
+        window.scrollTo({
+          top: cacheBusca.scrollPos,
+          behavior: 'instant' // 'instant' para não ver a animação de subida
+        });
+      }, 100);
+     return () => clearTimeout(timer);
+    }
+
+  const handleScroll = () => {
+    setCacheBusca(prev => ({ ...prev, scrollPos: window.scrollY }));
+  };
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    if (val !== cacheBusca.query) {
+      setLivrosBusca([]);
+      setPage(0);
+      setHasMore(true);
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    performSearch();
+  useEffect(() => {
+    if (searchQuery === cacheBusca.query && livrosBusca.length > 0 && page === cacheBusca.pagina) {
+      return;
+    }
+
+    if (searchQuery.trim() === "") {
+    setLivrosBusca([]);
+    setIsSearching(false);
+    return;
+  }
+
+     setIsSearching(true);
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        performSearch(page);
+      } else {
+      if (searchQuery === "") {
+        setLivrosBusca([]);
+      }
+      }
+    }, 500);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery, page]);
+
+const performSearch = async (pageNumber) => {
+    try {
+      setIsSearching(true);
+      const results = await listBooks(searchQuery.trim(), pageNumber, 20); 
+      const newBooks = results.content || results || [];
+      setLivrosBusca(prev => pageNumber === 0 ? newBooks : [...prev, ...newBooks]);
+      setHasMore(newBooks.length === 20);
+
+    } catch (error) {
+      console.error("Erro na busca:", error);
+    }finally {
+    setIsSearching(false);
+  }
   };
 
   const clearSearch = () => {
     setSearchQuery("");
+    setLivrosBusca([]);
+    setPage(0);
+    setHasMore(true);
+    setCacheBusca({ query: "", resultados: [], pagina: 0, temMais: true, scrollPos: 0 });
   };
 
-  // Pegamos os 3 primeiros para destaques e o restante para recomendações
-  const destaques = livros.slice(0, 3);
-  const recomendacoes = livros.slice(3);
+  const emModoBusca = searchQuery.trim().length > 0 || livrosBusca.length > 0;
+  const temDadosIniciais = (highlights?.length > 0) || (Recomendation?.length > 0);
 
-  if (!initialLivros || initialLivros.length === 0) {
-    return (
+  return (
+  <div className="max-w-6xl mx-auto animate-in slide-in-from-bottom-4">
+    {/* Barra de Busca - Sempre visível */}
+    <div className="mb-10">
+      <form onSubmit={(e) => e.preventDefault()} className="relative w-full max-w-2xl mx-auto">
+        <input
+          type="text"
+          placeholder="Pesquisar por título, autor ou categoria..."
+          value={searchQuery}
+          onChange={handleInputChange}
+          className="w-full pl-12 pr-10 py-4 rounded-2xl bg-white border-2 border-gray-100 shadow-sm focus:border-[#001b4e] focus:ring-0 transition-all outline-none text-gray-700"
+        />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <X size={20} />
+          </button>
+        )}
+      </form>
+      {isSearching && page === 0 && (
+        <p className="text-center mt-2 text-sm text-gray-400 animate-pulse">Buscando livros...</p>
+      )}
+    </div>
+
+    {/* LÓGICA DE CONTEÚDO */}
+    {emModoBusca ? (
+      /* 1. MODO BUSCA (Prioridade total se houver texto ou resultados) */
+      <div className="animate-in fade-in duration-500">
+        <h2 className="text-3xl font-bold text-[#001b4e] mb-8">
+          {searchQuery.trim() ? `Resultados para "${searchQuery}"` : "Todos os livros"}
+        </h2>
+        {livrosBusca.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 pb-6">
+              {livrosBusca.map((livro, index) => {
+                const isLast = livrosBusca.length === index + 1;
+                return (
+                  <div 
+                    key={`${livro.id}-${index}`} 
+                    ref={isLast ? lastBookElementRef : null}
+                    className="relative group cursor-pointer" 
+                    onClick={() => navigate(`/livro/${livro.id}`)}
+                  >
+                    <BookCard livro={livro} showRating={false} showTitle={true} showAuthor={true} />
+                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <ActionMenu 
+                        livro={livro} 
+                        onAddWishlist={onAddWishlist} 
+                        onAddMeusLivros={onAddMeusLivros} 
+                        wishlist={wishlist} 
+                        meusLivros={meusLivros} 
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Seus loaders e mensagens de paginação mantidos aqui */}
+            {isSearching && page > 0 && (
+              <div className="flex flex-col items-center justify-center py-10">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#001b4e] mb-2"></div>
+                <p className="text-gray-400 text-sm">Carregando mais livros...</p>
+              </div>
+            )}
+
+            {!hasMore && (
+              <div className="text-center py-12 border-t border-gray-100 mt-8">
+                <p className="text-gray-400 italic text-sm">
+                  Você visualizou todos os livros encontrados.
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
+          !isSearching && (
+            <div className="text-center py-20">
+              <p className="text-gray-500 text-lg">Nenhum resultado encontrado para sua pesquisa.</p>
+              <button onClick={clearSearch} className="text-[#001b4e] font-semibold mt-2 hover:underline">
+                Limpar filtros
+              </button>
+            </div>
+          )
+        )}
+      </div>
+    ) : temDadosIniciais ? (
+      /* 2. MODO NORMAL (Destaques e Recomendações) */
+      <>
+        <div className="flex gap-6 mb-6 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <Heart className="text-pink-500" size={16} />
+            <span>Lista de Desejos</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <BookOpen className="text-[#001b4e]" size={16} />
+            <span>Meus Livros</span>
+          </div>
+        </div>
+
+        <h2 className="text-3xl font-bold text-[#001b4e] mb-8">Destaques da semana</h2>
+        <div className="flex gap-8 items-center overflow-x-auto pb-6 scrollbar-hide">
+          {highlights.map((livro) => (
+            <div key={livro.id} className="min-w-[300px] relative group cursor-pointer" onClick={() => navigate(`/livro/${livro.id}`)}>
+              <BookCard livro={livro} size="large" showTitle={true} showAuthor={true} showRating={false} />
+              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <ActionMenu livro={livro} onAddWishlist={onAddWishlist} onAddMeusLivros={onAddMeusLivros} wishlist={wishlist} meusLivros={meusLivros} />
+              </div>
+            </div>
+          ))}
+          {highlights.length > 3 && (
+            <ChevronRight className="shrink-0 bg-[#001b4e] text-white p-3 rounded-full cursor-pointer ml-4 shadow-lg" size={50} />
+          )}
+        </div>
+
+        <h2 className="text-3xl font-bold text-[#001b4e] mt-12 mb-8">Livros que você pode gostar</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 pb-6">
+          {Recomendation.map((livro) => (
+            <div key={livro.id} className="relative group cursor-pointer" onClick={() => navigate(`/livro/${livro.id}`)}>
+              <BookCard livro={livro} showTitle={true} showAuthor={true} showRating={false} />
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <ActionMenu livro={livro} onAddWishlist={onAddWishlist} onAddMeusLivros={onAddMeusLivros} wishlist={wishlist} meusLivros={meusLivros} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    ) : (
+      /* 3. MODO VAZIO (Banco vazio e sem busca ativa) */
       <div className="flex flex-col items-center justify-center py-20 animate-in fade-in">
         <BookOpen size={64} className="text-gray-300 mb-4" />
         <p className="text-xl text-gray-500 font-medium">O catálogo está vazio no momento.</p>
-        <p className="text-gray-400">Tente novamente mais tarde.</p>
+        <p className="text-gray-400">Tente novamente mais tarde ou use a pesquisa.</p>
       </div>
-    );
-  }
+    )}
+  </div>
+);
 
-  return (
-    <div className="max-w-6xl mx-auto animate-in slide-in-from-bottom-4">
-      {/* Barra de Busca */}
-      <div className="mb-10">
-        <form onSubmit={handleSearch} className="relative w-full max-w-2xl mx-auto">
-          <input
-            type="text"
-            placeholder="Pesquisar por título, autor ou categoria..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-10 py-4 rounded-2xl bg-white border-2 border-gray-100 shadow-sm focus:border-[#001b4e] focus:ring-0 transition-all outline-none text-gray-700"
-          />
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X size={20} />
-            </button>
-          )}
-        </form>
-        {isSearching && (
-          <p className="text-center mt-2 text-sm text-gray-400 animate-pulse">Buscando livros...</p>
-        )}
-      </div>
-
-      {/* Legenda dos botões */}
-      <div className="flex gap-6 mb-6 text-sm text-gray-600">
-        <div className="flex items-center gap-2">
-          <Heart className="text-pink-500" size={16} />
-          <span>Lista de Desejos</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <BookOpen className="text-[#001b4e]" size={16} />
-          <span>Meus Livros</span>
-        </div>
-      </div>
-
-      {/* Destaques da semana */}
-      <h2 className="text-3xl font-bold text-[#001b4e] mb-8">
-        Destaques da semana
-      </h2>
-
-      <div className="flex gap-8 items-center overflow-x-auto pb-6 scrollbar-hide">
-        {destaques.map((livro) => (
-          <div
-            key={livro.id}
-            className="min-w-[300px] relative group cursor-pointer"
-            onClick={() => navigate(`/livro/${livro.id}`)}
-          >
-            <BookCard
-              livro={livro}
-              size="large"
-              showTitle={true}
-              showAuthor={true}
-              showRating={false}
-            />
-            {/* Botões de ação flutuantes */}
-            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <ActionMenu
-                livro={livro}
-                onAddWishlist={onAddWishlist}
-                onAddMeusLivros={onAddMeusLivros}
-                wishlist={wishlist}
-                meusLivros={meusLivros}
-              />
-            </div>
-          </div>
-        ))}
-
-        {livros.length > 3 && (
-          <ChevronRight
-            className="shrink-0 bg-[#001b4e] text-white p-3 rounded-full cursor-pointer ml-4 shadow-lg"
-            size={50}
-          />
-        )}
-      </div>
-
-      {/* Livros que você pode gostar */}
-      <h2 className="text-3xl font-bold text-[#001b4e] mt-12 mb-8">
-        Livros que você pode gostar
-      </h2>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 pb-6">
-        {recomendacoes.map((livro) => (
-          <div
-            key={livro.id}
-            className="relative group cursor-pointer"
-            onClick={() => navigate(`/livro/${livro.id}`)}
-          >
-            <BookCard
-              livro={livro}
-              showTitle={true}
-              showAuthor={true}
-            />
-            {/* Botões de ação flutuantes */}
-            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <ActionMenu
-                livro={livro}
-                onAddWishlist={onAddWishlist}
-                onAddMeusLivros={onAddMeusLivros}
-                wishlist={wishlist}
-                meusLivros={meusLivros}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 export default Catalogo;

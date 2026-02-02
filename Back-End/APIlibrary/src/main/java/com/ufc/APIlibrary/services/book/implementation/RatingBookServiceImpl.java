@@ -8,6 +8,7 @@ import com.ufc.APIlibrary.dto.book.DoRatingBookDTO;
 import com.ufc.APIlibrary.dto.book.ReturnBookShortDTO;
 import com.ufc.APIlibrary.dto.book.ReturnRatingBookDTO;
 import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
+import com.ufc.APIlibrary.infra.exceptions.book.BookNotAvailableException;
 import com.ufc.APIlibrary.infra.exceptions.book.InvalidRatingException;
 import com.ufc.APIlibrary.infra.exceptions.user.RatingNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
@@ -20,8 +21,10 @@ import com.ufc.APIlibrary.services.book.RatingBookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
 
@@ -52,6 +55,10 @@ public class RatingBookServiceImpl implements RatingBookService {
         Book book = bookRepository.findById(book_id)
             .orElseThrow(BookNotFoundException::new);
 
+        if (book.getAcquision_date() != null && book.getAcquision_date().isAfter(LocalDateTime.now())) {
+            throw new BookNotAvailableException();
+        }
+
         BookRating rating = repository.findByUserIdAndBookId(user.getId(), book_id);
 
         if (rating != null) {
@@ -63,7 +70,7 @@ public class RatingBookServiceImpl implements RatingBookService {
             // Atualiza avaliação existente
             rating.setRating(data.nota());
             rating.setReview(data.comentario());
-            rating.setDate_review(LocalDate.now());
+            rating.setDateReview(LocalDateTime.now());
             repository.save(rating);
         } else {
             if (data.nota() == -1) {
@@ -100,18 +107,19 @@ public class RatingBookServiceImpl implements RatingBookService {
         bookRepository.save(book);
 
         return "OK";
-}
+    }
 
     @Override
-    public List<ReturnRatingBookDTO> listRatedForBooks(Integer book_id) {
-        List<BookRating> books = repository.findByBookId(book_id);
-        List<ReturnRatingBookDTO> r = books.stream().map(rating -> new ReturnRatingBookDTO(
-                rating.getUser().getUsername(),
-                rating.getUser().getProfile(),
-                rating.getRating(),
-                rating.getReview(),
-                rating.getDate_review())).toList();
-        return r;
+    public Page<ReturnRatingBookDTO> listRatedForBooks(Integer book_id, Pageable pageable) {
+        Page<BookRating> ratingsPage = repository.findByBookIdAndRatingGreaterThanEqual(book_id, 0, pageable);
+    
+        return ratingsPage.map(rating -> new ReturnRatingBookDTO(
+            rating.getId().getUserId(),
+            rating.getUser().getUsername(),
+            rating.getUser().getProfile(),
+            rating.getRating(),
+            rating.getReview(),
+            rating.getDateReview()));
     }
 
     @Override

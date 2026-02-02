@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
-
+import toast from "react-hot-toast";
 // Componente de Estrelas Interativas
 const StarRatingInput = ({ rating, setRating }) => {
   const [hover, setHover] = useState(0);
@@ -50,9 +50,9 @@ function ModalAvaliacao({
   // Preencher campos quando abrir em modo de edição
   useEffect(() => {
     if (isOpen && livro) {
-      if (modoEdicao && livro.avaliacao) {
+      if (modoEdicao && livro.avaliacao && livro.avaliacao !== -1) {
         setRating(livro.avaliacao);
-        setComentario(livro.comentario || "");
+        setComentario(livro.descricao || livro.comentario || "");
       } else {
         setRating(0);
         setComentario("");
@@ -60,23 +60,20 @@ function ModalAvaliacao({
     }
   }, [isOpen, livro, modoEdicao]);
 
-  const handleSubmit = () => {
-    if (rating === 0) {
-      alert("Por favor, selecione uma nota!");
-      return;
-    }
-
-    onSubmit({
+const handleSubmit = async () => {
+  try {
+    await onSubmit({
       livroId: livro.id,
       rating,
       comentario,
     });
-
-    // Resetar campos
-    setRating(0);
-    setComentario("");
-    onClose();
-  };
+  
+    // O fechamento deve vir depois do sucesso da API
+    onClose(); 
+  } catch (err) {
+    console.error("A atualização falhou no componente.");
+  }
+};
 
   const handleClose = () => {
     setRating(0);
@@ -140,6 +137,7 @@ function ModalAvaliacao({
                 value={comentario}
                 onChange={(e) => setComentario(e.target.value)}
                 placeholder="Escreva sua opinião sobre o livro..."
+                maxLength={500}
                 className="w-full h-32 p-4 bg-gray-100 rounded-lg resize-none outline-none focus:ring-2 focus:ring-[#001b4e] transition-all"
               />
             </div>

@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Plus, BookPlus, ArrowLeft, Upload, X } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { addBook, getAdminUsernames, updateUserRole } from "../services/api";
+import { addBook, getAdminUsernames, updateUserRole, updateBook } from "../services/api";
 
-function Admin({ reloadBooks }) {
+function Admin({ onBookAdded }) {
     const navigate = useNavigate();
     const { isAdmin, user } = useAuth();
+    const location = useLocation();
+    const livroParaEditar = location.state?.livroParaEditar;
+    const modoEdicao = !!livroParaEditar;
 
     // Redireciona se não for admin
     useEffect(() => {
@@ -19,11 +22,16 @@ function Admin({ reloadBooks }) {
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         titulo: "",
+        subtitulo: "",
         autor: "",
+        isbn: "",
+        paginas: "",
+        idioma: "",
+        preview_url: "",
         editora: "",
         edicao: "",
         ano: "",
-        categoria: "",
+        categoria: [],
         descricao: "",
         imagemUrl: "",
         data_aquisicao: "",
@@ -42,11 +50,21 @@ function Admin({ reloadBooks }) {
         "Ciência",
         "História",
         "Biografia",
+        "Filosofia",
+        "Matemática",
+        "Religião",
+        "Física",
         "Autoajuda",
         "Tecnologia",
         "Negócios",
         "Infantil",
         "Poesia",
+        "Sci-fi",
+        "Suspense",
+        "Política",
+        "Finanças",
+        "Drama",
+        "Distopia",
         "Terror",
         "Aventura",
         "Outros",
@@ -68,6 +86,115 @@ function Admin({ reloadBooks }) {
         }
     };
 
+    useEffect(() => {
+
+        if (modoEdicao && livroParaEditar) {
+            const dataFormatada = livroParaEditar.data_aquisicao 
+            ? livroParaEditar.data_aquisicao.split('T')[0] 
+            : "";
+            setFormData({
+                titulo: livroParaEditar.titulo || "",
+                subtitulo: livroParaEditar.subtitulo || "", 
+                autor: livroParaEditar.autor || "",
+                isbn: livroParaEditar.isbn || "",   
+                paginas: livroParaEditar.paginas || "", 
+                idioma: livroParaEditar.idioma || "", 
+                preview_url: livroParaEditar.preview_url || "",
+                editora: livroParaEditar.editora || "",
+                edicao: livroParaEditar.edicao || "",
+                ano: livroParaEditar.ano_publicacao?.toString() || "",
+                categoria: livroParaEditar.categorias || [],
+                descricao: livroParaEditar.descricao || "",
+                imagemUrl: livroParaEditar.preview_picture_url || "",
+                data_aquisicao: dataFormatada,
+            });
+            
+           if (livroParaEditar.imagem) {
+            const source = livroParaEditar.imagem.startsWith('http') 
+                ? livroParaEditar.imagem 
+                : `data:image/jpeg;base64,${livroParaEditar.imagem}`;
+            
+            setImagemPreview(source);
+            }
+        }
+    }, [modoEdicao, livroParaEditar]);
+
+    const API_KEY = "AIzaSyAmRb7dH-L9iHmqo4CPb3vctUrLAi-vdSA";
+
+    const buscarIsbn = async (isbn) => {
+        try {
+            const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${API_KEY}`);
+            const data = await response.json();
+
+            if (data.totalItems === 0) {
+                toast.error("Nenhum livro encontrado com este ISBN");
+                return null;
+            }
+
+            const info = data.items[0].volumeInfo;
+
+            const imagem = info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || "";
+            const imagemUrlFinal = imagem.replace("http:", "https:");
+        
+            return {
+                titulo: info.title || "",
+                subtitulo: info.subtitle || "",
+                autor: info.authors ? info.authors.join(", ") : "",
+                editora: info.publisher || "",
+                isbn: isbn,
+                paginas: info.pageCount || "",
+                idioma: info.language || "", 
+                preview_url: info.previewLink || "", 
+                ano: info.publishedDate ? info.publishedDate.split("-")[0] : "",
+                descricao: info.description || "",
+                categoria: info.categories || [],
+                imagemUrl: imagemUrlFinal
+            };
+        } catch (error) {
+            toast.error("Erro ao consultar API do Google");
+            return null;
+        }
+    };
+
+
+    const [isbn, setIsbn] = useState("");
+
+    const handleIsbnSearch = async () => {
+        if (!isbn.trim()) return;
+    
+        setIsLoading(true);
+        const dadosLivro = await buscarIsbn(isbn);
+        setIsLoading(false);
+
+       if (dadosLivro) {
+        // Tenta mapear categorias do Google para as suas categorias em PT-BR
+        const categoriasMapeadas = dadosLivro.categoria
+            .map(catGoogle => {
+                // Procura na sua lista de 'categorias' se existe algo parecido
+                return categorias.find(minhaCat => 
+                    minhaCat.toLowerCase() === catGoogle.toLowerCase() || 
+                    (catGoogle === "Fiction" && minhaCat === "Ficção") ||
+                    (catGoogle === "Science" && minhaCat === "Ciência") ||
+                     (catGoogle === "History" && minhaCat === "história") ||
+                     (catGoogle === "Mistery" && minhaCat === "Mistério")
+                );
+            })
+            .filter(Boolean); // Remove nulos caso não ache correspondência
+
+        setFormData(prev => ({
+            ...prev,
+            ...dadosLivro,
+            categoria: categoriasMapeadas.length > 0 ? categoriasMapeadas : prev.categoria
+        }));
+
+        if (dadosLivro.imagemUrl) {
+            setImagemPreview(dadosLivro.imagemUrl);
+            setImagemFile(null); 
+        }
+        toast.success("Dados importados com sucesso!");
+    }
+    };
+
     const validarFormulario = () => {
         const newErrors = {};
 
@@ -77,7 +204,7 @@ function Admin({ reloadBooks }) {
         if (!formData.autor.trim()) {
             newErrors.autor = "O autor é obrigatório";
         }
-        if (!formData.categoria) {
+        if (!formData.categoria || formData.categoria.length === 0) {
             newErrors.categoria = "Selecione uma categoria";
         }
         if (formData.ano && (isNaN(formData.ano) || formData.ano < 1000 || formData.ano > new Date().getFullYear())) {
@@ -124,9 +251,8 @@ function Admin({ reloadBooks }) {
             return;
         }
 
-        setFormData((prev) => ({ ...prev, imagemUrl: "" }));
-
         setImagemFile(file);
+        setFormData(prev => ({ ...prev, imagemUrl: "" }));
 
         // Cria preview da imagem
         const reader = new FileReader();
@@ -172,12 +298,72 @@ function Admin({ reloadBooks }) {
     } finally {
         setRoleLoading(false);
     }
-};
+    };
+
+    const handleToggleCategoria = (cat) => {
+        setFormData(prev => {
+        const jaSelecionada = prev.categoria.includes(cat);
+        const novasCategorias = jaSelecionada
+            ? prev.categoria.filter(c => c !== cat) // Remove se já existir
+            : [...prev.categoria, cat];            // Adiciona se não existir
+        
+        return { ...prev, categoria: novasCategorias };
+        });
+    };
 
     // Remove imagem selecionada
     const handleRemoveImage = () => {
         setImagemFile(null);
         setImagemPreview(null);
+        setFormData(prev => ({ ...prev, imagemUrl: "" }));
+    };
+
+    const handleEdit = async (e) => {
+        e.preventDefault();
+        const validationErrors = validarFormulario();
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            let imagemBytes = null;
+            if (!formData.imagemUrl && imagemFile) {
+                imagemBytes = await fileToByteArray(imagemFile);
+            }
+
+            const dataIso = formData.data_aquisicao 
+                ? `${formData.data_aquisicao}T00:00:00` 
+                 : null;
+
+            const bookData = {
+                titulo: formData.titulo,
+                subtitulo: formData.subtitulo || null,
+                autor: formData.autor,
+                edicao: formData.edicao || null,
+                isbn: formData.isbn || null,
+                ano_publicacao: formData.ano ? parseInt(formData.ano) : null,
+                editora: formData.editora || null,
+                categorias: formData.categoria,
+                imagem: imagemBytes,
+                imagemUrl: formData.imagemUrl || null,
+                descricao: formData.descricao || null,
+                data_aquisicao: dataIso,
+                paginas: formData.paginas ? parseInt(formData.paginas) : null, 
+                idioma: formData.idioma || null,
+                preview_url: formData.preview_url || null 
+            };  
+
+            await updateBook(livroParaEditar.id, bookData);
+            await onBookAdded();
+        
+            toast.success("Livro atualizado com sucesso!");
+        } catch (error) {
+            toast.error(error.message || "Erro ao atualizar livro");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -198,38 +384,53 @@ function Admin({ reloadBooks }) {
                 imagemBytes = await fileToByteArray(imagemFile);
             }
 
+            const dataIso = formData.data_aquisicao 
+            ? `${formData.data_aquisicao}T00:00:00` 
+            : null;
+
             // Monta objeto compatível com BookRegisterDTO do backend
             const bookData = {
                 titulo: formData.titulo,
+                subtitulo: formData.subtitulo || null,
                 autor: formData.autor,
-                editora: formData.editora || null,
                 edicao: formData.edicao || null,
+                isbn: formData.isbn || null,
                 ano_publicacao: formData.ano ? parseInt(formData.ano) : null,
-                categorias: formData.categoria ? [formData.categoria] : [],
-                descricao: formData.descricao || null,
+                editora: formData.editora || null,
+                categorias: formData.categoria ? formData.categoria : [],
                 imagem: imagemBytes,
                 imagemUrl: formData.imagemUrl || null,
-                data_aquisicao: formData.data_aquisicao || null,
+                descricao: formData.descricao || null,
+                data_aquisicao: dataIso,
+                paginas: formData.paginas ? parseInt(formData.paginas) : null,
+                idioma: formData.idioma || null,
+                preview_url: formData.preview_url || null
             };
 
             await addBook(bookData);
-            await reloadBooks();
+            await onBookAdded();
             toast.success("Livro adicionado com sucesso!");
 
             // Limpa o formulário
             setFormData({
                 titulo: "",
+                subtitulo: "",
                 autor: "",
+                isbn: "",
+                paginas: "",
+                idioma: "",
+                preview_url: "",
                 editora: "",
                 edicao: "",
                 ano: "",
-                categoria: "",
+                categoria: [],
                 descricao: "",
                 imagemUrl: "",
                 data_aquisicao: "",
             });
             setImagemFile(null);
             setImagemPreview(null);
+            setIsbn("");
         } catch (error) {
             console.error("Erro ao adicionar livro:", error);
             toast.error(error.message || "Erro ao adicionar livro. Tente novamente.");
@@ -256,7 +457,7 @@ function Admin({ reloadBooks }) {
                                 <BookPlus className="text-yellow-500" size={32} />
                                 Painel de Administração
                             </h1>
-                            <p className="text-gray-500 mt-1">Adicione novos livros ao catálogo</p>
+                            <p className="text-gray-500 mt-1">{livroParaEditar ? "Edite livros do sistema" : "Adicione novos livros ao catálogo"}</p>
                         </div>
                     </div>
                     <span className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm font-medium">
@@ -268,12 +469,45 @@ function Admin({ reloadBooks }) {
                 <div className="bg-white rounded-2xl shadow-lg p-8">
                     <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
                         <Plus size={20} />
-                        Adicionar Novo Livro
+                        {livroParaEditar ? "Editar livro" : "Adicionar Novo Livro"}
                     </h2>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={livroParaEditar ? handleEdit : handleSubmit} className="space-y-6">
                         {/* Título e Autor - Lado a lado */}
+
+                        <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-8">
+                            <label className="block text-sm font-medium text-blue-800 mb-2">
+                                Importar dados via ISBN
+                            </label>
+                         <div className="flex gap-3">
+                            <input
+                                type="text"
+                                placeholder="Ex: 9788535914849"
+                                value={isbn}
+                                maxLength={20}
+                                onChange={(e) => setIsbn(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleIsbnSearch();
+                                }}}
+                                className="flex-1 rounded-xl border border-blue-200 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e]"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleIsbnSearch}
+                                disabled={isLoading}
+                                className="bg-[#001b4e] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#002a6e] transition-all disabled:bg-gray-400"
+                            >
+                                {isLoading ? "Buscando..." : "Buscar"}
+                            </button>
+                        </div>
+                        <p className="text-xs text-blue-600 mt-2">
+                            Isso preencherá automaticamente título, autor, editora, descrição e capa.
+                        </p>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
                             <div>
                                 <label htmlFor="titulo" className="block text-sm font-medium text-gray-700 mb-1">
                                     Título <span className="text-red-500">*</span>
@@ -282,6 +516,7 @@ function Admin({ reloadBooks }) {
                                     id="titulo"
                                     type="text"
                                     value={formData.titulo}
+                                    maxLength={255}
                                     onChange={(e) => handleChange("titulo", e.target.value)}
                                     placeholder="Ex: Dom Casmurro"
                                     disabled={isLoading}
@@ -299,6 +534,7 @@ function Admin({ reloadBooks }) {
                                     id="autor"
                                     type="text"
                                     value={formData.autor}
+                                    maxLength={255}
                                     onChange={(e) => handleChange("autor", e.target.value)}
                                     placeholder="Ex: Machado de Assis"
                                     disabled={isLoading}
@@ -306,6 +542,44 @@ function Admin({ reloadBooks }) {
                                         } px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e] transition-colors disabled:bg-gray-100`}
                                 />
                                 {errors.autor && <p className="mt-1 text-sm text-red-500">{errors.autor}</p>}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div className="flex flex-col gap-2">
+                                 <label className="text-sm font-medium text-gray-700">Subtítulo</label>
+                                    <input
+                                        type="text"
+                                        value={formData.subtitulo}
+                                        maxLength={255}
+                                        onChange={(e) => handleChange("subtitulo", e.target.value)}
+                                        className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e]"
+                                        placeholder="Ex: O Início da Jornada"
+                                    />
+                             </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-sm font-medium text-gray-700">ISBN-13</label>
+                                    <input
+                                        type="text"
+                                        value={formData.isbn}
+                                        maxLength={20}
+                                        onChange={(e) => handleChange("isbn", e.target.value)}
+                                        className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e]"
+                                        placeholder="978..."
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Preview URL */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium text-gray-700">Link de Preview (Google Books)</label>
+                                <input
+                                    type="text"
+                                    value={formData.preview_url}
+                                    maxLength={1000}
+                                 onChange={(e) => handleChange("preview_url", e.target.value)}
+                                    className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e]"
+                                    placeholder="https://books.google.com/..."
+                                />
                             </div>
                         </div>
 
@@ -319,6 +593,7 @@ function Admin({ reloadBooks }) {
                                     id="editora"
                                     type="text"
                                     value={formData.editora}
+                                    maxLength={100}
                                     onChange={(e) => handleChange("editora", e.target.value)}
                                     placeholder="Ex: Companhia das Letras"
                                     disabled={isLoading}
@@ -334,38 +609,84 @@ function Admin({ reloadBooks }) {
                                     id="edicao"
                                     type="text"
                                     value={formData.edicao}
+                                    maxLength={45}
                                     onChange={(e) => handleChange("edicao", e.target.value)}
                                     placeholder="Ex: 1ª Edição"
                                     disabled={isLoading}
                                     className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e] transition-colors disabled:bg-gray-100"
                                 />
                             </div>
+                        </div>
 
-                            <div>
-                                <label htmlFor="categoria" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Categoria <span className="text-red-500">*</span>
+                        <div className="w-full">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Categorias <span className="text-red-500">*</span>
                                 </label>
+
+                                    {/* Área de Tags com Flex-Wrap */}
+                                <div className="flex flex-wrap gap-2 mb-3 min-h-[40px] p-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                {formData.categoria.length > 0 ? (
+                                    formData.categoria.map((cat) => (
+                                    <span key={cat} className="flex items-center gap-1 bg-[#001b4e] text-white px-3 py-1 rounded-full text-sm">
+                                            {cat}
+                                            <button type="button" onClick={() => handleToggleCategoria(cat)} className="hover:text-red-400">
+                                             <X size={14} />
+                                        </button>
+                                    </span>
+                                        ))
+                                    ) : (
+                                        <span className="text-gray-400 text-sm">Nenhuma categoria selecionada</span>
+                                    )}
+                             </div>
+
+                                {/* Select para escolher novas */}
                                 <select
                                     id="categoria"
-                                    value={formData.categoria}
-                                    onChange={(e) => handleChange("categoria", e.target.value)}
+                                    value=""
+                                    onChange={(e) => {
+                                        if (e.target.value) handleToggleCategoria(e.target.value);
+                                    }}
                                     disabled={isLoading}
-                                    className={`w-full rounded-xl border ${errors.categoria ? "border-red-500" : "border-gray-300"
-                                        } px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e] transition-colors disabled:bg-gray-100 bg-white`}
+                                    className={`w-full rounded-xl border ${errors.categoria ? "border-red-500" : "border-gray-300"} px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e] bg-white`}
                                 >
-                                    <option value="">Selecione uma categoria</option>
-                                    {categorias.map((cat) => (
-                                        <option key={cat} value={cat}>
-                                            {cat}
-                                        </option>
-                                    ))}
+                                    <option value="">Clique para adicionar categorias...</option>
+                                    {categorias
+                                        .filter(cat => !formData.categoria.includes(cat))
+                                        .map((cat) => (
+                                            <option key={cat} value={cat}>
+                                                {cat}
+                                            </option>
+                                        ))
+                                    }
                                 </select>
                                 {errors.categoria && <p className="mt-1 text-sm text-red-500">{errors.categoria}</p>}
-                            </div>
                         </div>
 
                         {/* Ano, Páginas e ISBN */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {/* Páginas e Idioma */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-sm font-medium text-gray-700">Número de Páginas</label>
+                                    <input
+                                        type="number"
+                                        value={formData.paginas}
+                                        onChange={(e) => handleChange("paginas", e.target.value)}
+                                        className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e]"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-sm font-medium text-gray-700">Idioma</label>
+                                    <input
+                                        type="text"
+                                        maxLength={50}
+                                        value={formData.idioma}
+                                        onChange={(e) => handleChange("idioma", e.target.value)}
+                                        className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e]"
+                                        placeholder="Ex: Português"
+                                    />
+                                </div>
+                            </div>
                             <div>
                                 <label htmlFor="ano" className="block text-sm font-medium text-gray-700 mb-1">
                                     Ano de Publicação
@@ -459,13 +780,14 @@ function Admin({ reloadBooks }) {
                             <input
                                 type="url"
                                 value={formData.imagemUrl}
+                                maxLength={1000}
                                 onChange={(e) => {
                                     handleChange("imagemUrl", e.target.value);
 
                                     // Se digitou URL, remove imagem uploadada
                                     if (e.target.value) {
                                         setImagemFile(null);
-                                        setImagemPreview(null);
+                                        setImagemPreview(e.target.value);
                                     }
                                 }}
                                 placeholder="https://exemplo.com/capa.jpg"
@@ -489,6 +811,7 @@ function Admin({ reloadBooks }) {
                                 value={formData.descricao}
                                 onChange={(e) => handleChange("descricao", e.target.value)}
                                 placeholder="Digite uma breve descrição ou sinopse do livro..."
+                                maxLength={1000}
                                 disabled={isLoading}
                                 rows={4}
                                 className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-[#001b4e] transition-colors disabled:bg-gray-100 resize-none"
@@ -517,12 +840,12 @@ function Admin({ reloadBooks }) {
                                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                             ></path>
                                         </svg>
-                                        Adicionando...
+                                       {livroParaEditar ? "Editando..." :  "Adicionando..."}
                                     </>
                                 ) : (
                                     <>
                                         <BookPlus size={20} />
-                                        Adicionar Livro
+                                        {livroParaEditar ? "Editar livro" : "Adicionar Livro"}
                                     </>
                                 )}
                             </button>

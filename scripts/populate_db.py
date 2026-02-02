@@ -17,29 +17,28 @@ def get_base64_image(url):
         print(f"Erro ao baixar imagem: {e}")
     return None
 
-def register_user(username, nome, email, senha, telefone, role="USER"):
+def register_user(username, nome, email, senha, telefone):
     url = f"{BASE_URL}/user/register"
     data = {
         "username": username,
         "nome": nome,
         "email": email,
         "senha": senha,
-        "telefone": telefone,
-        "role": role
+        "telefone": telefone
     }
     try:
         response = requests.post(url, json=data)
         if response.status_code == 201:
-            print(f"✅ Usuário {username} registrado!")
+            print(f" Usuário {username} registrado!")
             return True
         elif response.status_code == 409:
-             print(f"⚠️ Usuário {username} já existe.")
+             print(f" Usuário {username} já existe.")
              return True # Consideramos sucesso para continuar
         else:
-            print(f"❌ Erro ao registrar {username}: {response.text}")
+            print(f" Erro ao registrar {username}: {response.text}")
             return False
     except Exception as e:
-        print(f"❌ Erro de conexão ao registrar {username}: {e}")
+        print(f"Erro de conexão ao registrar {username}: {e}")
         return False
 
 def login(email, senha):
@@ -50,10 +49,10 @@ def login(email, senha):
         if response.status_code == 200:
             return response.json()
         else:
-            print(f"❌ Erro ao logar {email}: {response.text}")
+            print(f" Erro ao logar {email}: {response.text}")
             return None
     except Exception as e:
-        print(f"❌ Erro de conexão ao logar {email}: {e}")
+        print(f" Erro de conexão ao logar {email}: {e}")
         return None
 
 def add_book(token, book_data):
@@ -66,26 +65,26 @@ def add_book(token, book_data):
     # Process image if it's a URL
     if 'imagem_url' in data_to_send:
         print(f"   Baixando capa de '{data_to_send['titulo']}'...")
-        image_b64 = get_base64_image(data_to_send['imagem_url'])
+        image_b64 = get_base64_image(data_to_send['imagemUrl'])
         if image_b64:
-             del data_to_send['imagem_url']
+             del data_to_send['imagemUrl']
              data_to_send['imagem'] = image_b64
         else:
-             print("   ⚠️ Falha ao baixar imagem, enviando sem.")
-             del data_to_send['imagem_url']
+             print("    Falha ao baixar imagem, enviando sem.")
+             del data_to_send['imagemUrl']
 
     try:
         response = requests.post(url, json=data_to_send, headers=headers)
         if response.status_code == 201:
             # CORREÇÃO: Backend retorna id_livro, nao id
             book_id = response.json().get('id_livro')
-            print(f"✅ Livro '{data_to_send['titulo']}' adicionado! ID: {book_id}")
+            print(f" Livro '{data_to_send['titulo']}' adicionado! ID: {book_id}")
             return book_id, data_to_send['titulo']
         else:
-            print(f"❌ Erro ao adicionar livro '{data_to_send['titulo']}': {response.text}")
+            print(f" Erro ao adicionar livro '{data_to_send['titulo']}': {response.text}")
             return None, None
     except Exception as e:
-        print(f"❌ Erro de conexão ao adicionar livro: {e}")
+        print(f"Erro de conexão ao adicionar livro: {e}")
         return None, None
 
 def rate_book(token, book_id, user_id, nota, comentario):
@@ -99,23 +98,23 @@ def rate_book(token, book_id, user_id, nota, comentario):
     try:
         response = requests.post(url, json=data, headers=headers)
         if response.status_code == 200:
-            print(f"   ⭐ Avaliação enviada!")
+            print(f"    Avaliação enviada!")
         else:
-            print(f"   ❌ Erro ao avaliar: {response.text}")
+            print(f"    Erro ao avaliar: {response.text}")
     except Exception as e:
-        print(f"   ❌ Erro de conexão ao avaliar: {e}")
+        print(f"    Erro de conexão ao avaliar: {e}")
 
 # --- DATASETS ---
 
-ADMIN = {"username": "admin", "nome": "Administrador", "email": "admin@email.com", "senha": "admin123", "telefone": "999999999", "role": "ADMIN"}
+ADMIN = {"username": "admina", "nome": "Administrador", "email": "admin@email.com", "senha": "admin123", "telefone": "999999999"}
 
 USERS = [
-    {"username": "leitor_vip", "nome": "Ricardo Souza", "email": "ricardo@email.com", "senha": "123", "telefone": "111111111", "role": "USER"},
-    {"username": "nanda_lima", "nome": "Fernanda Lima", "email": "fernanda@email.com", "senha": "123", "telefone": "222222222", "role": "USER"},
-    {"username": "potterhead", "nome": "Potter Head", "email": "potter@email.com", "senha": "123", "telefone": "333333333", "role": "USER"},
-    {"username": "gandalf_fan", "nome": "Gandalf O Cinzento", "email": "gandalf@email.com", "senha": "123", "telefone": "444444444", "role": "USER"},
-    {"username": "dev_senior", "nome": "Dev Senior", "email": "dev@email.com", "senha": "123", "telefone": "555555555", "role": "USER"},
-    {"username": "estudante_js", "nome": "Estudante JS", "email": "js@email.com", "senha": "123", "telefone": "666666666", "role": "USER"},
+    {"username": "leitor_vip", "nome": "Ricardo Souza", "email": "ricardo@email.com", "senha": "123456", "telefone": "111111111"},
+    {"username": "nanda_lima", "nome": "Fernanda Lima", "email": "fernanda@email.com", "senha": "123456", "telefone": "222222222"},
+    {"username": "potterhead", "nome": "Potter Head", "email": "potter@email.com", "senha": "123456", "telefone": "333333333"},
+    {"username": "gandalf_fan", "nome": "Gandalf O Cinzento", "email": "gandalf@email.com", "senha": "123456", "telefone": "444444444"},
+    {"username": "dev_senior", "nome": "Dev Senior", "email": "dev@email.com", "senha": "123456", "telefone": "555555555"},
+    {"username": "estudante_js", "nome": "Estudante JS", "email": "js@email.com", "senha": "123456", "telefone": "666666666"},
 ]
 
 BOOKS = [
@@ -127,7 +126,7 @@ BOOKS = [
         "editora": "Editora Fantasia",
         "categorias": ["Fantasia", "Suspense"],
         "descricao": "Um lobo solitário vaga pela floresta encantada em busca de redenção.",
-        "imagem_url": "https://images.unsplash.com/photo-1614726365723-49cfaacf560b?q=80&w=800&auto=format&fit=crop"
+        "imagemUrl": "https://images.unsplash.com/photo-1614726365723-49cfaacf560b?q=80&w=800&auto=format&fit=crop"
     },
     {
         "titulo": "Harry Potter e a Pedra Filosofal",
@@ -137,7 +136,7 @@ BOOKS = [
         "editora": "Rocco",
         "categorias": ["Fantasia", "Aventura"],
         "descricao": "A história do menino que sobreviveu e descobriu ser um bruxo no seu aniversário de 11 anos.",
-        "imagem_url": "https://images.unsplash.com/photo-1626618012641-bf8ca5564394?q=80&w=800&auto=format&fit=crop"
+        "imagemUrl": "https://images.unsplash.com/photo-1626618012641-bf8ca5564394?q=80&w=800&auto=format&fit=crop"
     },
     {
         "titulo": "O Senhor dos Anéis",
@@ -147,7 +146,7 @@ BOOKS = [
         "editora": "Martins Fontes",
         "categorias": ["Fantasia", "Épico"],
         "descricao": "Uma jornada épica pela Terra Média para destruir o Um Anel.",
-        "imagem_url": "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?q=80&w=800&auto=format&fit=crop"
+        "imagemUrl": "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?q=80&w=800&auto=format&fit=crop"
     },
     {
         "titulo": "Clean Code",
@@ -157,7 +156,7 @@ BOOKS = [
         "editora": "Alta Books",
         "categorias": ["Tecnologia", "Programação"],
         "descricao": "Como escrever código limpo e manutenível. Leitura obrigatória para devs.",
-        "imagem_url": "https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=800&auto=format&fit=crop" # Generic code book
+        "imagemUrl": "https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=800&auto=format&fit=crop" # Generic code book
     }
 ]
 
@@ -186,10 +185,9 @@ def main():
     
     # 1. Registrar Admin
     print("[1] Configurando Admin...")
-    register_user(**ADMIN)
-    admin_login = login(ADMIN["email"], ADMIN["senha"])
+    admin_login = login("admin@admin.com", "admin123")
     if not admin_login:
-        print("❌ Falha crítica no login do admin.")
+        print(" Falha crítica no login do admin.")
         return
     admin_token = admin_login.get("token")
 
@@ -224,19 +222,19 @@ def main():
                 break
         
         if not target_bid:
-            print(f"⚠️ Livro não encontrado para chave '{book_title_key}'")
+            print(f" Livro não encontrado para chave '{book_title_key}'")
             continue
 
-        print(f"📝 Avaliando '{book_title_key}' (ID: {target_bid})...")
+        print(f" Avaliando '{book_title_key}' (ID: {target_bid})...")
         for username, nota, comentario in reviews:
             user_info = user_tokens.get(username)
             if user_info:
                 rate_book(user_info["token"], target_bid, user_info["id"], nota, comentario)
             else:
-                print(f"   ⚠️ Usuário '{username}' não encontrado para avaliar.")
+                print(f"    Usuário '{username}' não encontrado para avaliar.")
 
     print("\n=== SCRIPT FINALIZADO COM SUCESSO! ===")
-    print("Agora você pode rodar este script e sua apresentação terá dados lindos! 🚀")
+    print("Agora você pode rodar este script e sua apresentação terá dados lindos! ")
 
 if __name__ == "__main__":
     main()
