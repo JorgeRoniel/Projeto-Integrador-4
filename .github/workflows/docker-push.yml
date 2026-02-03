@@ -24,13 +24,17 @@ jobs:
         with:
           context: ./Back-End/APIlibrary
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/library-backend:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/library-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/library-backend:v${{ github.run_number }}
 
       - name: Build and Push Frontend
         uses: docker/build-push-action@v5
         with:
           context: ./Front-End
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/library-frontend:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/library-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/library-frontend:v${{ github.run_number }}
           build-args: |
             VITE_API_URL=

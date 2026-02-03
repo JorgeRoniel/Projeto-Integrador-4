@@ -49,23 +49,27 @@ public class UserController {
     }
 
     @PutMapping("/{id}/update")
+    @PreAuthorize("#user_id == authentication.principal.id")
     public ResponseEntity<Void> updateUserRoute(@PathVariable("id") Integer user_id, @RequestBody @Valid UpdateUserDTO data) {
         services.updateUser(user_id, data);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @DeleteMapping("/{id}/delete")
+    @PreAuthorize("#user_id == authentication.principal.id")
     public ResponseEntity<Void> deleteUserRoute(@PathVariable("id") Integer user_id) {
         services.deleteUser(user_id);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @GetMapping("/ratings/{id}")
+    @PreAuthorize("#user_id == authentication.principal.id")
     public ResponseEntity<List<ReturnBookShortDTO>> listRatingsForUser(@PathVariable("id") Integer user_id) {
         return ResponseEntity.ok(ratingBookService.listRatedBooksByUser(user_id));
     }
 
     @GetMapping("/{id}/wishlist")
+    @PreAuthorize("#user_id == authentication.principal.id")
     public ResponseEntity<List<WishListDTO>> listOfWishList(@PathVariable("id") Integer user_id) {
         return ResponseEntity.ok(wishListService.listUsersWishes(user_id));
     }
