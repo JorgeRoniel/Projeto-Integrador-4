@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity(securedEnabled = true)
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class WebSecurityConfig {
     @Autowired
     private SecurityFilter filter;

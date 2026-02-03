@@ -4,6 +4,7 @@ import com.ufc.APIlibrary.dto.dashboard.DashboardResponseDTO;
 import com.ufc.APIlibrary.services.dashboard.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,6 +15,7 @@ public class DashboardController {
     private DashboardService service;
 
     @GetMapping("/user/{id}")
+    @PreAuthorize("#id == authentication.principal.id")
     public ResponseEntity<DashboardResponseDTO> getDashboard(
         @PathVariable Integer id
     ) {

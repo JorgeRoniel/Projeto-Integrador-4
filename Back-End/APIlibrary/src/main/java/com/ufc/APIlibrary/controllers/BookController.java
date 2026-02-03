@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -69,6 +70,7 @@ public class BookController {
     }
 
     @PostMapping("/{id}/rating")
+    @PreAuthorize("#data.user_id == authentication.principal.id")
     public ResponseEntity<Void> doRatingRoute(@PathVariable("id") Integer book_id,
             @RequestBody @Valid DoRatingBookDTO data) {
 

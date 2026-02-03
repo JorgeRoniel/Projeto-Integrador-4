@@ -18,6 +18,7 @@ import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.EmailAlreadyExistsExc
 import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.PhoneNumberAlreadyExistsException;
 import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.UsernameAlreadyExistsException;
 import com.ufc.APIlibrary.infra.exceptions.book.BookNotAvailableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -65,7 +66,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<FormaterRestException> authErrorHandler(AuthenticationException exception) {
-        FormaterRestException response = new FormaterRestException(HttpStatus.FORBIDDEN,"Email ou senha inválidos");
+        FormaterRestException response = new FormaterRestException(HttpStatus.FORBIDDEN, "Email ou senha inválidos");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
@@ -73,6 +74,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<FormaterRestException> invalidPasswordHandler(InvalidPasswordException exception) {
         FormaterRestException response = new FormaterRestException(HttpStatus.BAD_REQUEST, exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<FormaterRestException> handleAccessDenied(AccessDeniedException exception) {
+        FormaterRestException response = new FormaterRestException(
+                HttpStatus.FORBIDDEN,
+                "Você não tem permissão para realizar esta operação.");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     @ExceptionHandler(RegisterErrorException.class)
@@ -88,8 +97,9 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-        @ExceptionHandler(UsernameAlreadyExistsException.class)
-    public ResponseEntity<FormaterRestException> usernameAlreadyExistsHandler(UsernameAlreadyExistsException exception) {
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<FormaterRestException> usernameAlreadyExistsHandler(
+            UsernameAlreadyExistsException exception) {
         FormaterRestException response = new FormaterRestException(HttpStatus.CONFLICT, exception.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
@@ -106,7 +116,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-        @ExceptionHandler(LastAdminException.class)
+    @ExceptionHandler(LastAdminException.class)
     public ResponseEntity<FormaterRestException> lastAdminHandler(LastAdminException exception) {
         FormaterRestException response = new FormaterRestException(HttpStatus.NOT_FOUND, exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
@@ -120,7 +130,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-       @ExceptionHandler(IsbnNotAvailableException.class)
+    @ExceptionHandler(IsbnNotAvailableException.class)
     public ResponseEntity<FormaterRestException> isbnNotAvailableHandler(IsbnNotAvailableException exception) {
         FormaterRestException response = new FormaterRestException(HttpStatus.BAD_REQUEST, exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
