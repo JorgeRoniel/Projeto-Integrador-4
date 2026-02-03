@@ -13,9 +13,7 @@ services:
       - app-network
 
   backend:
-    build:
-      context: ./Back-End/APIlibrary
-      dockerfile: Dockerfile
+    image: gronite/library-backend:latest
     container_name: Back-End-PI4
     depends_on:
       postgres:
@@ -36,11 +34,7 @@ services:
     restart: on-failure
 
   frontend:
-    build:
-      context: ./Front-End
-      dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=${VITE_API_URL}
+    image: gronite/library-frontend:latest
     container_name: Front-End-PI4
     depends_on:
       - backend
