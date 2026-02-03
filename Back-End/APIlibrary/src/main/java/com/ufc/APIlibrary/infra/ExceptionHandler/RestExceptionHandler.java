@@ -2,8 +2,8 @@ package com.ufc.APIlibrary.infra.ExceptionHandler;
 
 import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.book.InvalidRatingException;
-import com.ufc.APIlibrary.infra.exceptions.book.IsbnAlreadyExistsException;
-import com.ufc.APIlibrary.infra.exceptions.book.WishListAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.book.uniqueness.IsbnAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.book.uniqueness.WishListAlreadyExistsException;
 import com.ufc.APIlibrary.infra.exceptions.user.ExpiredTokenException;
 import com.ufc.APIlibrary.infra.exceptions.user.InvalidPasswordException;
 import com.ufc.APIlibrary.infra.exceptions.user.InvalidTokenException;

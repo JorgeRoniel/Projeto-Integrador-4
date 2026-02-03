@@ -10,13 +10,11 @@ import com.ufc.APIlibrary.dto.book.ReturnRatingBookDTO;
 import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.book.BookNotAvailableException;
 import com.ufc.APIlibrary.infra.exceptions.book.InvalidRatingException;
-import com.ufc.APIlibrary.infra.exceptions.user.RatingNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.WishListNotFoundException;
 import com.ufc.APIlibrary.repositories.BookRatingRepository;
 import com.ufc.APIlibrary.repositories.BookRepository;
 import com.ufc.APIlibrary.repositories.UserRepository;
-import com.ufc.APIlibrary.repositories.WishListRepository;
 import com.ufc.APIlibrary.services.book.RatingBookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -122,24 +120,21 @@ public class RatingBookServiceImpl implements RatingBookService {
             rating.getDateReview()));
     }
 
-    @Override
+   @Override
     public List<ReturnBookShortDTO> listRatedBooksByUser(Integer user_id) {
-        List<BookRating> ratings = repository.findByUserId(user_id);
-        if (!ratings.isEmpty()) {
-            return ratings.stream().map(r -> new ReturnBookShortDTO(
-                    r.getBook().getId(),
-                    r.getBook().getTitle(),
-                    r.getBook().getAuthor(),
-                    resolveImagem(r.getBook()),
-                    r.getBook().getRating_avg(),
-                    r.getBook().getCategory(),
-                    r.getRating(),
-                    r.getReview(),
-                    r.getBook().getPopularity_score(),
-                    r.getBook().getAcquision_date())).toList();
-        } else {
-            throw new RatingNotFoundException();
-        }
+    List<BookRating> ratings = repository.findByUserId(user_id);
+    
+        return ratings.stream().map(r -> new ReturnBookShortDTO(
+            r.getBook().getId(),
+            r.getBook().getTitle(),
+            r.getBook().getAuthor(),
+            resolveImagem(r.getBook()),
+            r.getBook().getRating_avg(),
+            r.getBook().getCategory(),
+            r.getRating(),
+            r.getReview(),
+            r.getBook().getPopularity_score(),
+            r.getBook().getAcquision_date())).toList();
     }
 
     private String resolveImagem(Book book) {

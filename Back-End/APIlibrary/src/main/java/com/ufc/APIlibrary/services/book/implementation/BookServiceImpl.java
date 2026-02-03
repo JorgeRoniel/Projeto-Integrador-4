@@ -7,7 +7,7 @@ import com.ufc.APIlibrary.dto.book.BookUpdateDTO;
 import com.ufc.APIlibrary.dto.book.ReturnBookShortDTO;
 import com.ufc.APIlibrary.dto.book.ReturnBookLongDTO;
 import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
-import com.ufc.APIlibrary.infra.exceptions.book.IsbnAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.book.uniqueness.IsbnAlreadyExistsException;
 import com.ufc.APIlibrary.repositories.BookRatingRepository;
 import com.ufc.APIlibrary.repositories.BookRepository;
 import com.ufc.APIlibrary.repositories.UserRepository;
@@ -19,7 +19,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Base64;

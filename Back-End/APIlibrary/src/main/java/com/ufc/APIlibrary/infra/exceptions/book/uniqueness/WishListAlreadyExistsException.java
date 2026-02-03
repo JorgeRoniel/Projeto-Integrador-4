@@ -1,4 +1,4 @@
-package com.ufc.APIlibrary.infra.exceptions.book;
+package com.ufc.APIlibrary.infra.exceptions.book.uniqueness;
 
 public class WishListAlreadyExistsException extends RuntimeException {
     public WishListAlreadyExistsException() {

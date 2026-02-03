@@ -23,7 +23,7 @@ public record BookRegisterDTO(
     @Size(max = 45, message = "A edição deve ter no máximo 45 caracteres") 
     String edicao, 
 
-    @Size(min = 10, max = 13, message = "O ISBN deve ter entre 10 e 13 dígitos")
+    @Size(min = 10, max = 13, message = "O ISBN deve ter entre 10 e 13 dígitos (apenas números)")
     String isbn, 
 
     @Min(value = 1, message = "São aceitos apenas números positivos")

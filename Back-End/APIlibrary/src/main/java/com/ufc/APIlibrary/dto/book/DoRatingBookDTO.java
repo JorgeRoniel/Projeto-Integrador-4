@@ -10,7 +10,7 @@ public record DoRatingBookDTO(
     @Max(value = 5, message = "Nota grande demais, o limite é 5")
     Integer nota, 
 
-    @Size(max = 500, message = "O comentário deve ter no máximo 500 caracteres")
+    @Size(max = 1000, message = "O comentário deve ter no máximo 1000 caracteres")
     String comentario
 ) {
     public DoRatingBookDTO

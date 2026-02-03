@@ -170,7 +170,6 @@ function Admin({ onBookAdded }) {
         // Tenta mapear categorias do Google para as suas categorias em PT-BR
         const categoriasMapeadas = dadosLivro.categoria
             .map(catGoogle => {
-                // Procura na sua lista de 'categorias' se existe algo parecido
                 return categorias.find(minhaCat => 
                     minhaCat.toLowerCase() === catGoogle.toLowerCase() || 
                     (catGoogle === "Fiction" && minhaCat === "Ficção") ||
@@ -179,7 +178,7 @@ function Admin({ onBookAdded }) {
                      (catGoogle === "Mistery" && minhaCat === "Mistério")
                 );
             })
-            .filter(Boolean); // Remove nulos caso não ache correspondência
+            .filter(Boolean);
 
         setFormData(prev => ({
             ...prev,
@@ -239,13 +238,11 @@ function Admin({ onBookAdded }) {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Valida tipo de arquivo
         if (!file.type.startsWith('image/')) {
             toast.error('Por favor, selecione apenas arquivos de imagem');
             return;
         }
 
-        // Valida tamanho (máx 5MB)
         if (file.size > 5 * 1024 * 1024) {
             toast.error('A imagem deve ter no máximo 5MB');
             return;
@@ -254,7 +251,6 @@ function Admin({ onBookAdded }) {
         setImagemFile(file);
         setFormData(prev => ({ ...prev, imagemUrl: "" }));
 
-        // Cria preview da imagem
         const reader = new FileReader();
         reader.onload = () => {
             setImagemPreview(reader.result);
@@ -290,7 +286,6 @@ function Admin({ onBookAdded }) {
 
         setRoleForm({ username: "", role: "" });
 
-        // Recarrega lista de admins
         const data = await getAdminUsernames();
         setAdminUsernames(data);
     } catch (err) {
@@ -441,7 +436,6 @@ function Admin({ onBookAdded }) {
 
     return (
         <div className="min-h-screen bg-gray-50 p-8 animate-in fade-in duration-500">
-            {/* Header */}
             <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
@@ -465,7 +459,6 @@ function Admin({ onBookAdded }) {
                     </span>
                 </div>
 
-                {/* Formulário */}
                 <div className="bg-white rounded-2xl shadow-lg p-8">
                     <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
                         <Plus size={20} />
@@ -473,7 +466,6 @@ function Admin({ onBookAdded }) {
                     </h2>
 
                     <form onSubmit={livroParaEditar ? handleEdit : handleSubmit} className="space-y-6">
-                        {/* Título e Autor - Lado a lado */}
 
                         <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-8">
                             <label className="block text-sm font-medium text-blue-800 mb-2">
@@ -662,9 +654,7 @@ function Admin({ onBookAdded }) {
                                 {errors.categoria && <p className="mt-1 text-sm text-red-500">{errors.categoria}</p>}
                         </div>
 
-                        {/* Ano, Páginas e ISBN */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {/* Páginas e Idioma */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium text-gray-700">Número de Páginas</label>
@@ -722,7 +712,6 @@ function Admin({ onBookAdded }) {
                             </p>
                         </div>
 
-                        {/* Upload de Imagem */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Imagem da Capa
@@ -801,7 +790,6 @@ function Admin({ onBookAdded }) {
                             </p>
                         </div>
 
-                        {/* Descrição */}
                         <div>
                             <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-1">
                                 Descrição / Sinopse

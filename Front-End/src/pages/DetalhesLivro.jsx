@@ -6,7 +6,7 @@ import { getBook, getBookRatings, getRelatedBooks } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 
 
-function DetalhesLivro({ onAddWishlist, onAddMeusLivros, meusLivros, wishlist, handleDeletarLivro }) {
+function DetalhesLivro({ onAddWishlist, onAddMeusLivros, meusLivros, wishlist, handleDeletarLivro, refreshCatalogo, cacheBusca, setCacheBusca }) {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -193,7 +193,7 @@ function DetalhesLivro({ onAddWishlist, onAddMeusLivros, meusLivros, wishlist, h
                 </div>
 
                 {/* LADO DIREITO */}
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                     <div className="grid grid-cols-3 gap-4 mb-8">
                         <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-2xl flex flex-col items-center justify-center min-h-[100px]">
                             <span className="text-sm font-bold text-[#001b4e] mb-1">Nota do usuário</span>
@@ -230,9 +230,9 @@ function DetalhesLivro({ onAddWishlist, onAddMeusLivros, meusLivros, wishlist, h
                         </button>
                     </div>
 
-                    <div className="mb-8">
+                    <div className="mb-8 min-w-0">
                         <h3 className="text-lg font-bold text-[#001b4e] mb-3 border-b border-gray-100 pb-2">Sinopse</h3>
-                        <p className="text-gray-700 leading-relaxed break-words overflow-hidden text-lg text-justify">{livro.descricao || livro.sipnose || "Sinopse indisponível."}</p>
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words text-lg sm:text-justify text-left">{livro.descricao || livro.sipnose || "Sinopse indisponível."}</p>
                     </div>
                 </div>
             </div>
@@ -240,11 +240,11 @@ function DetalhesLivro({ onAddWishlist, onAddMeusLivros, meusLivros, wishlist, h
             {isAdmin && (
                 <div className="flex flex-row gap-4 mt-8 p-4 bg-red-50 rounded-xl border border-red-100 w-full">
                 <button
-                    onClick={() => {
-                    if (window.confirm("Tem certeza que deseja excluir este livro permanentemente?")) {
-                        handleDeletarLivro(livro.id);
-                    }
-                 }}
+                    onClick={async () => { 
+                        if (window.confirm("Tem certeza?")) {
+                            await handleDeletarLivro(livro.id);
+                        }
+                        }}
                     className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors shadow-md"
                     >
                     DELETAR LIVRO

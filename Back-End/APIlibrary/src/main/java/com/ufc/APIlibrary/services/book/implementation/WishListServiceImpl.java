@@ -8,7 +8,7 @@ import com.ufc.APIlibrary.dto.book.NotificationDTO;
 import com.ufc.APIlibrary.dto.book.WishListDTO;
 import com.ufc.APIlibrary.dto.wishlist.NotificationResponseDTO;
 import com.ufc.APIlibrary.infra.exceptions.book.BookNotFoundException;
-import com.ufc.APIlibrary.infra.exceptions.book.WishListAlreadyExistsException;
+import com.ufc.APIlibrary.infra.exceptions.book.uniqueness.WishListAlreadyExistsException;
 import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
 import com.ufc.APIlibrary.infra.exceptions.user.WishListNotFoundException;
 import com.ufc.APIlibrary.repositories.BookRepository;
@@ -64,20 +64,17 @@ public class WishListServiceImpl implements WishListService {
 
     @Override
     public List<WishListDTO> listUsersWishes(Integer user_id) {
-        List<WishList> wl = repository.findByUserId(user_id);
-        if (!wl.isEmpty()) {
-            return wl.stream().map(w -> new WishListDTO(
-                    w.getBook().getId(),
-                    w.getBook().getTitle(),
-                    w.getBook().getAuthor(),
-                    resolveImagem(w.getBook()),
-                    w.getBook().getRating_avg(),
-                    w.getBook().getCategory(),
-                    w.getNotification(),
-                    w.getBook().getAcquision_date())).toList();
-        } else {
-            throw new WishListNotFoundException();
-        }
+    List<WishList> wl = repository.findByUserId(user_id);
+    
+        return wl.stream().map(w -> new WishListDTO(
+            w.getBook().getId(),
+            w.getBook().getTitle(),
+            w.getBook().getAuthor(),
+            resolveImagem(w.getBook()),
+            w.getBook().getRating_avg(),
+            w.getBook().getCategory(),
+            w.getNotification(),
+            w.getBook().getAcquision_date())).toList();
     }
 
     private String resolveImagem(Book book) {

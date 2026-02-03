@@ -76,6 +76,9 @@ function AppRoutes({
             onAddMeusLivros={adicionarAMeusLivros}
             meusLivros={meusLivros}
             handleDeletarLivro={handleDeletarLivro}
+            refreshCatalogo={refreshCatalogo}
+            cacheBusca={cacheBusca}
+            setCacheBusca={setCacheBusca}
           />
         }
       />

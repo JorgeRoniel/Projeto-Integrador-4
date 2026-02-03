@@ -72,8 +72,8 @@ function ModalVisualizarAvaliacao({ isOpen, onClose, livro, onEdit }) {
           </div>
 
           {/* Comentário */}
-          <div className="flex-1 flex flex-col">
-            <p className="text-gray-700 text-lg leading-relaxed break-words overflow-hidden flex-1">
+          <div className="flex-1 flex flex-col w-full min-w-0 min-h-[250px] justify-between">
+            <p className="whitespace-pre-wrap break-words text-gray-700 text-lg leading-relaxed overflow-hidden">
               {livro.descricao || livro.comentario || (
                 <span className="text-gray-400 italic">
                   Nenhum comentário adicionado.

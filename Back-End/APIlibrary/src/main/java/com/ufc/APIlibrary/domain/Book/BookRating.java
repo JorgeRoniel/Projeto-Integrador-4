@@ -36,7 +36,7 @@ public class BookRating implements Serializable {
     @Column(nullable = false)
     private Integer rating;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "TEXT")
     private String review;
 
     @Column(name = "date_review", columnDefinition = "TEXT")

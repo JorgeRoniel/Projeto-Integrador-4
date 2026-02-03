@@ -137,7 +137,7 @@ const handleSubmit = async () => {
                 value={comentario}
                 onChange={(e) => setComentario(e.target.value)}
                 placeholder="Escreva sua opinião sobre o livro..."
-                maxLength={500}
+                maxLength={1000}
                 className="w-full h-32 p-4 bg-gray-100 rounded-lg resize-none outline-none focus:ring-2 focus:ring-[#001b4e] transition-all"
               />
             </div>
