@@ -1,11 +1,11 @@
 package com.ufc.APIlibrary.services.book;
 
 import com.ufc.APIlibrary.domain.Book.Book;
+import com.ufc.APIlibrary.dto.book.BookExternalDetailsDTO;
 import com.ufc.APIlibrary.dto.book.BookRegisterDTO;
 import com.ufc.APIlibrary.dto.book.BookUpdateDTO;
 import com.ufc.APIlibrary.dto.book.ReturnBookShortDTO;
 import com.ufc.APIlibrary.dto.book.ReturnBookLongDTO;
-import com.ufc.APIlibrary.dto.book.ReturnCreationBookDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -28,5 +28,7 @@ public interface BookService {
     void deleteBook(Integer id);
 
     void updateBook(Integer id, BookUpdateDTO data);
+
+    BookExternalDetailsDTO searchExternalBookByIsbn(String isbn);
 
 }

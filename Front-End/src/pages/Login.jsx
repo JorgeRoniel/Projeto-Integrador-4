@@ -49,7 +49,7 @@ function Login({ logoEscura, logoClara }) {
         const destino = state?.from || "/catalogo";
         setTimeout(() => navigate(destino), 500);
       } else {
-        toast.error(result.error || "Email ou senha incorretos");
+        toast.error(result.message || result.error || "Email ou senha incorretos");
       }
     } catch (error) {
       console.error("Erro no login:", error);

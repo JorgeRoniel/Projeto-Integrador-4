@@ -6,5 +6,8 @@ CREATE TABLE users_tb (
     password VARCHAR(255) NOT NULL,
     phone_number VARCHAR(15),
     role VARCHAR(10) NOT NULL,
-    profile BYTEA
+    profile BYTEA,
+    failed_attempt INTEGER DEFAULT 0,
+    account_non_locked BOOLEAN DEFAULT TRUE,
+    lock_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

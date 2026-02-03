@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -32,6 +33,16 @@ public class User implements UserDetails {
     private byte[] profile;
     @Enumerated(EnumType.STRING)
     private UserRoles role;
+
+    @Column(name = "failed_attempt")
+    private Integer failedAttempt = 0;
+
+    @Column(name = "account_non_locked")
+    private boolean accountNonLocked = true;
+
+    @Column(name = "lock_time")
+    private LocalDateTime lockTime;
+    
 
     public User(String username, String name, String email, String password, String phone_number, byte[] profile,
             UserRoles role) {

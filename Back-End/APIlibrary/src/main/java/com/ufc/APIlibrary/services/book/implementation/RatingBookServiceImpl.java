@@ -61,7 +61,7 @@ public class RatingBookServiceImpl implements RatingBookService {
 
         if (rating != null) {
 
-            if (rating.getRating() == -1 && data.nota() > 0) {
+            if (rating.getRating() == -1 && data.nota() >= 0) {
                 book.setCount_reading(Math.max(0, book.getCount_reading() - 1));
                 book.setCount_read(book.getCount_read() + 1);
             }

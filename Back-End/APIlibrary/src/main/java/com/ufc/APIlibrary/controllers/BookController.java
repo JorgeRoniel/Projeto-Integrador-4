@@ -36,8 +36,8 @@ public class BookController {
 
     @GetMapping
     public ResponseEntity<Page<ReturnBookShortDTO>> listToHomePage(
-        @RequestParam(value = "search", required = false) String search,
-        @PageableDefault(size = 12, sort = "title", direction = Sort.Direction.ASC) Pageable page) {
+            @RequestParam(value = "search", required = false) String search,
+            @PageableDefault(size = 12, sort = "title", direction = Sort.Direction.ASC) Pageable page) {
         return ResponseEntity.ok(bookService.listToHome(search, page));
     }
 
@@ -60,7 +60,8 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReturnBookLongDTO> returnBook(@PathVariable Integer id, @RequestParam(required = false) Integer userId) {
+    public ResponseEntity<ReturnBookLongDTO> returnBook(@PathVariable Integer id,
+            @RequestParam(required = false) Integer userId) {
         ReturnBookLongDTO book = bookService.findBook(id, userId);
         if (book == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -68,7 +69,8 @@ public class BookController {
     }
 
     @PostMapping("/{id}/rating")
-    public ResponseEntity<Void> doRatingRoute(@PathVariable("id") Integer book_id, @RequestBody @Valid DoRatingBookDTO data) {
+    public ResponseEntity<Void> doRatingRoute(@PathVariable("id") Integer book_id,
+            @RequestBody @Valid DoRatingBookDTO data) {
 
         ratingBookService.rating(data, book_id);
         return ResponseEntity.ok().build();
@@ -77,17 +79,16 @@ public class BookController {
 
     @GetMapping("/{id}/rating")
     public ResponseEntity<Page<ReturnRatingBookDTO>> listRatingsForBook(
-        @PathVariable("id") Integer book_id,
-        @PageableDefault(size = 5, sort = "dateReview", direction = Sort.Direction.DESC) Pageable page) {
+            @PathVariable("id") Integer book_id,
+            @PageableDefault(size = 5, sort = "dateReview", direction = Sort.Direction.DESC) Pageable page) {
         return ResponseEntity.ok(ratingBookService.listRatedForBooks(book_id, page));
     }
 
     @PutMapping("/{id}/update")
     @org.springframework.security.access.annotation.Secured("ROLE_ADMIN")
     public ResponseEntity<Void> updateBook(
-        @PathVariable("id") Integer book_id, 
-        @RequestBody @Valid BookUpdateDTO data
-    ) {
+            @PathVariable("id") Integer book_id,
+            @RequestBody @Valid BookUpdateDTO data) {
         bookService.updateBook(book_id, data);
         return ResponseEntity.ok().build();
     }
@@ -97,6 +98,13 @@ public class BookController {
     public ResponseEntity<Void> deleteBook(@PathVariable("id") Integer book_id) {
         bookService.deleteBook(book_id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/external/isbn")
+    @org.springframework.security.access.annotation.Secured("ROLE_ADMIN")
+    public ResponseEntity<BookExternalDetailsDTO> getExternalBookDetails(@RequestParam("isbn") String isbn) {
+        BookExternalDetailsDTO details = bookService.searchExternalBookByIsbn(isbn);
+        return ResponseEntity.ok(details);
     }
 
 }

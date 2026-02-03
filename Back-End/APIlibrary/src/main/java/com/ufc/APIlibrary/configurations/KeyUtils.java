@@ -1,7 +1,7 @@
 package com.ufc.APIlibrary.configurations;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -10,21 +10,29 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import org.springframework.core.io.ClassPathResource;
 
+@Component
 public class KeyUtils {
 
-    public static RSAPrivateKey readPrivateKey() throws Exception {
-        byte[] keyBytes = new ClassPathResource("certs/private_key.pem").getContentAsByteArray();
-        String temp = new String(keyBytes)
+    @Value("${RSA_PRIVATE_KEY}")
+    private String privateKeyStr;
+
+    public RSAPrivateKey readPrivateKey() throws Exception {
+
+        if (privateKeyStr == null) {
+            throw new RuntimeException("Variável de ambiente RSA_PRIVATE_KEY não encontrada!");
+        }
+
+        String temp = privateKeyStr
                 .replace("-----BEGIN PRIVATE KEY-----", "")
                 .replace("-----END PRIVATE KEY-----", "")
-                .replaceAll("\\s", "");
+                .replaceAll("\\s", ""); // Remove quebras de linha e espaços
         
         byte[] decoded = Base64.getDecoder().decode(temp);
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
         return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(spec);
     }
 
-    public static RSAPublicKey readPublicKey() throws Exception {
+    public RSAPublicKey readPublicKey() throws Exception {
         byte[] keyBytes = new ClassPathResource("certs/public_key.pem").getContentAsByteArray();
         String temp = new String(keyBytes)
                 .replace("-----BEGIN PUBLIC KEY-----", "")

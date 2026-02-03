@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.configurations.KeyUtils;
 import org.springframework.stereotype.Service;
@@ -22,9 +21,9 @@ public class TokenService {
     private final RSAPrivateKey privateKey;
     private final RSAPublicKey publicKey;
 
-    public TokenService() throws Exception {
-        this.privateKey = KeyUtils.readPrivateKey();
-        this.publicKey = KeyUtils.readPublicKey();
+    public TokenService(KeyUtils keyUtils) throws Exception {
+        this.privateKey = keyUtils.readPrivateKey();
+        this.publicKey = keyUtils.readPublicKey();
     }
 
     public String generateToken(User user) {

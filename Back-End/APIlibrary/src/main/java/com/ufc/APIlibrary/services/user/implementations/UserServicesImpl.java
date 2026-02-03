@@ -12,6 +12,7 @@ import com.ufc.APIlibrary.infra.exceptions.user.InvalidTokenException;
 import com.ufc.APIlibrary.infra.exceptions.user.LastAdminException;
 import com.ufc.APIlibrary.infra.exceptions.user.RegisterErrorException;
 import com.ufc.APIlibrary.infra.exceptions.user.UserNotFoundException;
+import com.ufc.APIlibrary.infra.exceptions.user.LockedAccountException;
 import com.ufc.APIlibrary.repositories.UserRepository;
 import com.ufc.APIlibrary.services.email.EmailService;
 import com.ufc.APIlibrary.services.token.TokenService;
@@ -20,16 +21,22 @@ import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.EmailAlreadyExistsExc
 import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.PhoneNumberAlreadyExistsException;
 import com.ufc.APIlibrary.infra.exceptions.user.uniqueness.UsernameAlreadyExistsException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class UserServicesImpl implements UserServices {
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -44,13 +51,62 @@ public class UserServicesImpl implements UserServices {
 
     @Override
     public ReturnLoginDTO login(LoginUserDTO data) {
-        var emailpass = new UsernamePasswordAuthenticationToken(data.email(), data.senha());
-        var auth = authenticationManager.authenticate(emailpass);
-        User user = (User) auth.getPrincipal();
-        String token = tokenService.generateToken((User) user);
-        return new ReturnLoginDTO(token, user.getId(), user.getUsername(), user.getName(), user.getEmail(),
-                user.getProfile(), user.getPhone_number(), user.getRole().toString());
+        User user = (User) repository.findByEmail(data.email());
 
+        if (user != null) {
+            if (user.getLockTime() != null && user.getLockTime().plusHours(1).isBefore(LocalDateTime.now())) {
+                resetFailedAttempts(user);
+            }
+            if (!user.isAccountNonLocked()) {
+                throw new LockedAccountException();
+            }
+        }
+
+        try {
+            var emailpass = new UsernamePasswordAuthenticationToken(data.email(), data.senha());
+
+            var auth = authenticationManager.authenticate(emailpass);
+
+            User userAutenticado = (User) auth.getPrincipal();
+            resetFailedAttempts(userAutenticado);
+
+            String token = tokenService.generateToken(userAutenticado);
+
+            return new ReturnLoginDTO(
+                    token,
+                    userAutenticado.getId(),
+                    userAutenticado.getUsername(),
+                    userAutenticado.getName(),
+                    userAutenticado.getEmail(),
+                    userAutenticado.getProfile(),
+                    userAutenticado.getPhone_number(),
+                    userAutenticado.getRole().toString());
+
+        } catch (BadCredentialsException e) {
+            if (user != null) {
+                increaseFailedAttempts(user);
+            }
+            throw e;
+        }
+
+    }
+
+    private void increaseFailedAttempts(User user) {
+        int newFailAttempts = user.getFailedAttempt() + 1;
+        user.setFailedAttempt(newFailAttempts);
+
+        if (newFailAttempts >= 5) {
+            user.setAccountNonLocked(false);
+            user.setLockTime(LocalDateTime.now());
+        }
+        repository.save(user);
+    }
+
+    private void resetFailedAttempts(User user) {
+        user.setFailedAttempt(0);
+        user.setAccountNonLocked(true);
+        user.setLockTime(null);
+        repository.save(user);
     }
 
     @Override
@@ -69,7 +125,6 @@ public class UserServicesImpl implements UserServices {
         if (repository.existsByUsername(data.username())) {
             throw new UsernameAlreadyExistsException();
         }
-
 
         String pass = encoder.encode(data.senha());
         // Constructor expectations: username, name, email, password, phone, role
@@ -150,29 +205,30 @@ public class UserServicesImpl implements UserServices {
     @Override
     public List<String> listAdminUsernames() {
         return repository.findByRole(UserRoles.ADMIN)
-            .stream()
-            .map(User::getUsername)
-            .toList();
+                .stream()
+                .map(User::getUsername)
+                .toList();
     }
 
-   @Override
+    @Override
     public void recoverPassword(String email) {
         User user = (User) repository.findByEmail(email);
-        if (user == null) throw new UserNotFoundException();
+        if (user == null)
+            throw new UserNotFoundException();
 
         String token = tokenService.generatePasswordRecoveryToken(user);
 
-        String recoveryLink = "http://localhost:3000/reset-password?token=" + token;
+        String recoveryLink = frontendUrl + "/reset-password?token=" + token;
 
         String corpoEmail = "Olá " + user.getName() + ",\n\n" +
-                        "Recebemos uma solicitação para redefinir sua senha.\n" +
-                        "Clique no link abaixo (válido por 15 min):\n" +
-                        recoveryLink + "\n\n" +
-                        "Se não foi você, apenas ignore este e-mail.";
-                        
+                "Recebemos uma solicitação para redefinir sua senha.\n" +
+                "Clique no link abaixo (válido por 15 min):\n" +
+                recoveryLink + "\n\n" +
+                "Se não foi você, apenas ignore este e-mail.";
+
         emailService.enviarEmail(user.getEmail(), "Recuperação de Senha", corpoEmail);
-    
-}
+
+    }
 
     @Override
     public void resetPassword(ResetPasswordDTO data) {
@@ -183,12 +239,12 @@ public class UserServicesImpl implements UserServices {
         String subject = tokenService.validateToken(data.token(), "password_recovery");
 
         if (subject.isEmpty()) {
-            throw new InvalidTokenException(); 
+            throw new InvalidTokenException();
         }
 
         Integer userId = Integer.parseInt(subject);
         User user = repository.findById(userId)
-            .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(UserNotFoundException::new);
 
         user.setPassword(encoder.encode(data.senha()));
         repository.save(user);

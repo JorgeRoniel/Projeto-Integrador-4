@@ -186,6 +186,17 @@ export async function updateUserRole(username, role) {
 // ==================== LIVROS ====================
 
 /**
+ * Busca dados de um livro via ISBN através do nosso backend (que consulta o Google)
+ * @param {string} isbn - O código ISBN do livro
+ * @returns {Promise<Object>} - Dados do livro mapeados pelo DTO do Backend
+ */
+export async function getBookDetailsByIsbn(isbn) {
+  return fetchAPI(`/api/book/external/isbn?isbn=${isbn}`, {
+    method: "GET",
+  });
+}
+
+/**
  * Lista livros para a home page
  * @param {number} [page=0] - Número da página
  * @param {number} [size=12] - Tamanho da página
