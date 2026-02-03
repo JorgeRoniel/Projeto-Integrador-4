@@ -71,3 +71,7 @@ docker compose -f docker-compose.prod.yml down -v
 
 - **Frontend:** [http://localhost:3000/](http://localhost:3000/)
 - **Documentação da API (Swagger):** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
+---
+
+Lembrando que ao iniciar a API e o banco não tiver nenhum conta Administrador, uma conta ADMIN padrão será criada, com email admin@admin.com e senha admin123, com ela você pode testar as funcionalidades de ADMIN, em produção você deve modificar essa senha, ou tornar outra conta ADMIN pelo painel e deletar essa
