@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 function Login({ logoEscura, logoClara }) {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user, loading } = useAuth();
   const [formData, setFormData] = useState({ email: "", senha: "" });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const location = useLocation(); 
+  const state = location.state;
 
   const validarEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -44,9 +46,10 @@ function Login({ logoEscura, logoClara }) {
 
       if (result.success) {
         toast.success(`Bem-vindo, ${result.user.nome}!`);
-        setTimeout(() => navigate("/catalogo"), 500);
+        const destino = state?.from || "/catalogo";
+        setTimeout(() => navigate(destino), 500);
       } else {
-        toast.error(result.error || "Email ou senha incorretos");
+        toast.error(result.message || result.error || "Email ou senha incorretos");
       }
     } catch (error) {
       console.error("Erro no login:", error);
@@ -63,6 +66,33 @@ function Login({ logoEscura, logoClara }) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
+
+  useEffect(() => {
+    // Verifica se na URL tem "?expired=true"
+    const params = new URLSearchParams(location.search);
+    if (params.get("expired")) {
+      toast.error("Sua sessão expirou. Por favor, faça login novamente.", {
+        id: "session-expired",
+      });
+      
+      // Limpa a URL para o erro não ficar aparecendo se atualizar a página
+      window.history.replaceState({}, document.title, "/login");
+    }
+  }, [location]);
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/catalogo");
+    }
+  }, [user, loading, navigate]);
+
+    if (loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#001b4e]"></div>
+      </div>
+    );
+  }
 
   return (
     /*Tela de login(A tela que nos iniciamos)*/

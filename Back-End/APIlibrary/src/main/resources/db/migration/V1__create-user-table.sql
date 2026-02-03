@@ -2,8 +2,12 @@ CREATE TABLE users_tb (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(50),
     username VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(50) NOT NULL,
-    password VARCHAR(50) NOT NULL,
-    phone_numer VARCHAR(15),
-    role VARCHAR(10) NOT NULL
+    email VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(15),
+    role VARCHAR(10) NOT NULL,
+    profile BYTEA,
+    failed_attempt INTEGER DEFAULT 0,
+    account_non_locked BOOLEAN DEFAULT TRUE,
+    lock_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

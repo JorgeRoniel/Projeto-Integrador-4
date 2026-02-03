@@ -26,6 +26,18 @@ async function fetchAPI(endpoint, options = {}) {
   try {
     const response = await fetch(url, config);
 
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("library_user");
+      
+      // Criamos um evento customizado para o App perceber o logout
+      window.dispatchEvent(new Event("auth-expired"));
+      
+      // Redireciona com um parâmetro para avisar o Login
+      window.location.href = "/login?expired=true";
+      return;
+    }
+
     // Se a resposta não tiver conteúdo (204 No Content ou 201 Created sem body)
     if (response.status === 204 || response.status === 201) {
       return { success: true, status: response.status };
@@ -69,6 +81,31 @@ export async function login(email, senha) {
   return fetchAPI("/api/user/login", {
     method: "POST",
     body: JSON.stringify({ email, senha }),
+  });
+}
+
+/**
+ * Solicita o link de recuperação de senha
+ * @param {string} email - Email do usuário
+ * @returns {Promise<{success: boolean}>}
+ */
+export async function recoverPassword(email) {
+  return fetchAPI("/api/user/recover-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+/**
+ * Define uma nova senha para o usuário
+ * @param {string} token - Token vindo da URL do e-mail
+ * @param {string} senha - Nova senha digitada
+ * @returns {Promise<{success: boolean}>}
+ */
+export async function resetPasswordFinal(token, senha) {
+  return fetchAPI("/api/user/reset-password-final", {
+    method: "PUT",
+    body: JSON.stringify({ token, senha }),
   });
 }
 
@@ -121,7 +158,43 @@ export async function deleteUser(userId) {
   });
 }
 
+// ==================== ADMIN ====================
+
+/**
+ * Lista usernames dos administradores
+ * @returns {Promise<Array<string>>}
+ */
+export async function getAdminUsernames() {
+  return fetchAPI("/api/user/admin/usernames", {
+    method: "GET",
+  });
+}
+
+/**
+ * Atualiza a role de um usuário pelo username (ADMIN ou USER)
+ * @param {string} username
+ * @param {"ADMIN" | "USER"} role
+ * @returns {Promise<{success: boolean}>}
+ */
+export async function updateUserRole(username, role) {
+  return fetchAPI(`/api/user/role/${username}`, {
+    method: "PUT",
+    body: JSON.stringify({ role }),
+  });
+}
+
 // ==================== LIVROS ====================
+
+/**
+ * Busca dados de um livro via ISBN através do nosso backend (que consulta o Google)
+ * @param {string} isbn - O código ISBN do livro
+ * @returns {Promise<Object>} - Dados do livro mapeados pelo DTO do Backend
+ */
+export async function getBookDetailsByIsbn(isbn) {
+  return fetchAPI(`/api/book/external/isbn?isbn=${isbn}`, {
+    method: "GET",
+  });
+}
 
 /**
  * Lista livros para a home page
@@ -129,31 +202,61 @@ export async function deleteUser(userId) {
  * @param {number} [size=12] - Tamanho da página
  * @returns {Promise<Object>}
  */
-export async function listBooks(page = 0, size = 12) {
-  return fetchAPI(`/api/book?page=${page}&size=${size}`, {
-    method: "GET",
+export async function listBooks(search = "", page = 0, size = 20) {
+  const searchQuery = search ? `&search=${encodeURIComponent(search)}` : "";
+  return fetchAPI(`/api/book?page=${page}&size=${size}${searchQuery}`, { 
+    method: "GET" 
   });
 }
 
 /**
  * Busca um livro pelo ID
  * @param {number} bookId - ID do livro
+ * @param {number} userId - ID do usuário
  * @returns {Promise<Object>}
  */
-export async function getBook(bookId) {
-  return fetchAPI(`/api/book/${bookId}`, {
-    method: "GET",
+export async function getBook(bookId, userId) {
+  const url = userId ? `/api/book/${bookId}?userId=${userId}` : `/api/book/${bookId}`;
+  return fetchAPI(url, { method: "GET" });
+}
+
+// Busca os destaques da semana (Lista fixa)
+export async function getWeeklyHighlights() {
+  return fetchAPI("/api/book/highlights", { method: "GET" });
+}
+
+/**
+ * Lista avaliações de um livro de forma paginada
+ * @param {number} userId - ID do usuário
+ * @param {number} [page=0] - Página atual
+ * @param {number} [size=5] - Quantidade por página
+ * @returns {Promise<Object>} - Retorna o objeto Page do Spring
+ */
+export async function getRecommendations(userId, page = 0, size = 5) {
+  return fetchAPI(`/api/book/recommendations/${userId}?page=${page}&size=${size}`, { 
+    method: "GET" 
   });
 }
 
 /**
- * Pesquisa livros por título, autor ou categoria
- * @param {string} query - Termo de busca
- * @returns {Promise<Array>}
+ * Busca livros relacionados baseados no autor e categorias do livro atual
+ * @param {number} bookId - ID do livro de referência
+ * @returns {Promise<Array>} - Lista de livros relacionados
  */
-export async function searchBooks(query) {
-  return fetchAPI(`/api/book/search?query=${encodeURIComponent(query)}`, {
+export async function getRelatedBooks(bookId) {
+  return fetchAPI(`/api/book/${bookId}/related`, {
     method: "GET",
+  });
+}
+
+export async function deleteBook(bookId) {
+  return fetchAPI(`/api/book/${bookId}/delete`, { method: "DELETE" });
+}
+
+export async function updateBook(bookId, bookData) {
+  return fetchAPI(`/api/book/${bookId}/update`, { 
+    method: "PUT", 
+    body: JSON.stringify(bookData) 
   });
 }
 
@@ -195,12 +298,14 @@ export async function rateBook(bookId, userId, nota, comentario = "") {
 }
 
 /**
- * Lista avaliações de um livro
+ * Lista avaliações de um livro de forma paginada
  * @param {number} bookId - ID do livro
- * @returns {Promise<Array>}
+ * @param {number} [page=0] - Página atual
+ * @param {number} [size=10] - Quantidade por página
+ * @returns {Promise<Object>} - Retorna o objeto Page do Spring
  */
-export async function getBookRatings(bookId) {
-  return fetchAPI(`/api/book/${bookId}/rating`, {
+export async function getBookRatings(bookId, page = 0, size = 10) {
+  return fetchAPI(`/api/book/${bookId}/rating?page=${page}&size=${size}`, {
     method: "GET",
   });
 }
@@ -266,6 +371,30 @@ export async function getUserWishlist(userId) {
   });
 }
 
+// ==================== NOTIFICAÇÕES ====================
+
+/**
+ * Busca notificações de livros da wishlist que já foram adquiridos
+ * @param {number} userId - ID do usuário
+ * @returns {Promise<Array<{bookId: number, title: string}>>}
+ */
+export async function checkNotifications(userId) {
+  return fetchAPI(`/api/wishlist/check/${userId}`, {
+    method: "GET",
+  });
+}
+
+/**
+ * Atualiza o status de notificação de um item da wishlist
+ * @param {Object} data - { user_id, book_id, notification }
+ */
+export async function updateNotificationStatus(data) {
+  return fetchAPI("/api/wishlist/notification", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export default {
   login,
   register,
@@ -273,7 +402,6 @@ export default {
   deleteUser,
   listBooks,
   getBook,
-  searchBooks,
   addBook,
   rateBook,
   getBookRatings,
@@ -282,4 +410,14 @@ export default {
   removeFromWishlist,
   getUserWishlist,
   getDashboardData,
+  getAdminUsernames,
+  updateUserRole,
+  checkNotifications,
+  updateNotificationStatus,
+  recoverPassword,
+  resetPasswordFinal,
+  getWeeklyHighlights,
+  getRecommendations,
+  getRelatedBooks,
+  deleteBook
 };

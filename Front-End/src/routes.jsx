@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import RecuperarSenha from "./pages/RecuperarSenha";
+import ResetPassword from "./pages/ResetPassword";
 import Confirmacao from "./pages/Confirmacao";
 import Catalogo from "./pages/Catalogo";
 import ListaDesejo from "./pages/ListaDesejo";
@@ -23,7 +24,14 @@ function AppRoutes({
   atualizarAvaliacaoLivro,
   logoEscura,
   logoClara,
-  livros,
+  handleToggleNotification,
+  highlights,
+  Recomendation,
+  listBooks,
+  refreshCatalogo,
+  cacheBusca,
+  setCacheBusca,
+  handleDeletarLivro
 }) {
   return (
     <Routes>
@@ -41,15 +49,21 @@ function AppRoutes({
       />
       <Route path="/confirmacao" element={<Confirmacao />} />
 
+      <Route path="/reset-password" element={<ResetPassword />} />
+
       <Route
         path="/catalogo"
         element={
           <Catalogo
-            livros={livros}
+            highlights={highlights}
+            Recomendation={Recomendation}
+            listBooks={listBooks}
             onAddWishlist={adicionarAListaDesejo}
             onAddMeusLivros={adicionarAMeusLivros}
             wishlist={wishlist}
             meusLivros={meusLivros}
+            cacheBusca={cacheBusca}
+            setCacheBusca={setCacheBusca}
           />
         }
       />
@@ -57,10 +71,14 @@ function AppRoutes({
         path="/livro/:id"
         element={
           <DetalhesLivro
-            livros={livros}
+            wishlist={wishlist}
             onAddWishlist={adicionarAListaDesejo}
             onAddMeusLivros={adicionarAMeusLivros}
             meusLivros={meusLivros}
+            handleDeletarLivro={handleDeletarLivro}
+            refreshCatalogo={refreshCatalogo}
+            cacheBusca={cacheBusca}
+            setCacheBusca={setCacheBusca}
           />
         }
       />
@@ -71,6 +89,7 @@ function AppRoutes({
             wishlist={wishlist}
             onRemove={removerDaListaDesejo}
             onMoverParaMeusLivros={moverParaMeusLivros}
+            onToggleNotification={handleToggleNotification}
           />
         }
       />
@@ -86,8 +105,10 @@ function AppRoutes({
         }
       />
       <Route path="/perfil" element={<Perfil />} />
-      <Route path="/admin" element={<Admin />} />
-
+      <Route
+      path="/admin"
+      element={<Admin onBookAdded={refreshCatalogo} />}
+      />
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />

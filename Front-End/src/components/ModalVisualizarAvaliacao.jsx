@@ -1,4 +1,5 @@
 import React from "react";
+import { useEffect } from "react";
 import { X, Pencil } from "lucide-react";
 
 // Componente de Estrelas (apenas visualização)
@@ -20,6 +21,12 @@ const StarRatingDisplay = ({ rating }) => {
     </div>
   );
 };
+
+    const getImageSrc = (img) => {
+        if (!img) return "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop";
+        if (img.startsWith('http') || img.startsWith('data:')) return img;
+        return `data:image/jpeg;base64,${img}`;
+    };
 
 function ModalVisualizarAvaliacao({ isOpen, onClose, livro, onEdit }) {
   if (!isOpen || !livro) return null;
@@ -57,7 +64,7 @@ function ModalVisualizarAvaliacao({ isOpen, onClose, livro, onEdit }) {
           <div className="flex-shrink-0">
             <div className="w-44 h-64 rounded-xl overflow-hidden shadow-lg border-4 border-[#001b4e]">
               <img
-                src={livro.capa}
+                src={getImageSrc(livro.imagem || livro.capa)}
                 alt={livro.titulo}
                 className="w-full h-full object-cover"
               />
@@ -65,9 +72,9 @@ function ModalVisualizarAvaliacao({ isOpen, onClose, livro, onEdit }) {
           </div>
 
           {/* Comentário */}
-          <div className="flex-1 flex flex-col">
-            <p className="text-gray-700 text-lg leading-relaxed flex-1">
-              {livro.comentario || (
+          <div className="flex-1 flex flex-col w-full min-w-0 min-h-[250px] justify-between">
+            <p className="whitespace-pre-wrap break-words text-gray-700 text-lg leading-relaxed overflow-hidden">
+              {livro.descricao || livro.comentario || (
                 <span className="text-gray-400 italic">
                   Nenhum comentário adicionado.
                 </span>

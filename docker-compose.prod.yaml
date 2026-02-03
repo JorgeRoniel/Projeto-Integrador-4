@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - app-network
+
+  backend:
+    image: gronite/library-backend:latest
+    container_name: Back-End-PI4
+    depends_on:
+      postgres:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_MAIL_USERNAME: ${EMAIL_USER}
+      SPRING_MAIL_PASSWORD: ${EMAIL_PASS}
+      RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY}
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    restart: on-failure
+
+  frontend:
+    image: gronite/library-frontend:latest
+    container_name: Front-End-PI4
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+    networks:
+      - app-network
+    restart: on-failure
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

@@ -186,6 +186,7 @@ function Perfil() {
             <input
               type="text"
               value={usuario.nome}
+              maxLength={50}
               onChange={(e) => handleInputChange('nome', e.target.value)}
               className="w-full border-2 border-gray-200 rounded-lg px-4 py-2 outline-none focus:border-[#001b4e] transition-colors"
             />
@@ -196,6 +197,7 @@ function Perfil() {
             <input
               type="text"
               value={usuario.username}
+              maxLength={50}
               onChange={(e) => handleInputChange('username', e.target.value)}
               className="w-full border-2 border-gray-200 rounded-lg px-4 py-2 outline-none focus:border-[#001b4e] transition-colors"
             />

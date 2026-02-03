@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "book_ratings")
@@ -36,16 +36,17 @@ public class BookRating implements Serializable {
     @Column(nullable = false)
     private Integer rating;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "TEXT")
     private String review;
 
-    private LocalDate date_review;
+    @Column(name = "date_review", columnDefinition = "TEXT")
+    private LocalDateTime dateReview;
 
     public BookRating(User user, Book book, Integer rating, String review) {
         this.user = user;
         this.book = book;
         this.rating = rating;
         this.review = review;
-        this.date_review = LocalDate.now();
+        this.dateReview = LocalDateTime.now();
     }
 }

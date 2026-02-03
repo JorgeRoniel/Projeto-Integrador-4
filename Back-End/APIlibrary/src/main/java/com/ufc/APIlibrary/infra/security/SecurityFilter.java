@@ -28,7 +28,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         var token = recoveryToken(request);
         if (token != null) {
-            var subject = tokenService.validateToken(token);
+            var subject = tokenService.validateToken(token, null);
             try {
                 Integer userId = Integer.parseInt(subject);
                 UserDetails user = repository.findById(userId).orElse(null);
@@ -56,6 +56,8 @@ public class SecurityFilter extends OncePerRequestFilter {
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/api/user/login")
                 || path.startsWith("/api/user/register")
+                || path.startsWith("/api/user/recover-password")
+                || path.startsWith("/api/user/reset-password-final")
                 || request.getMethod().equalsIgnoreCase("OPTIONS");
     }
 
