@@ -29,6 +29,8 @@ FRONTEND_URL=http://localhost:3000
 VITE_API_URL=
 ```
 
+- Caso seja muito trabalhoso atribuir valores a todas às variáveis, fale com um dos colaboradores para te repassar um .env válido por um canal seguro
+
 ### 3. Execução para Desenvolvimento (Local)
 Use este comando se você quiser rodar o projeto a partir do código-fonte na sua máquina (o Docker irá construir as imagens localmente):
 
