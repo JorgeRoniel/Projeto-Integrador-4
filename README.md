@@ -56,7 +56,7 @@ Use este comando para rodar a aplicação baixando as imagens prontas do **Docke
 2 - Execute o seguinte comando:
 
 ```
-docker compose -f docker-compose.prod.yaml up -d
+docker compose -f docker-compose.prod.yaml --env-file .env up -d
 ```
 
 > OBS: Caso você tenha volumes anteriores no seu Docker, talvez a aplicação não suba, rode antes o seguinte comando e depois o comando anterior
