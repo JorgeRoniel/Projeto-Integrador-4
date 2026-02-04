@@ -7,7 +7,7 @@ Este projeto utiliza **Docker** para facilitar a configuração e execução de 
 <h1>Como executar a aplicação:</h1>
 
 ### 1. Pré-requisitos
-Certifique-se de possuir o **Docker** e o **Docker Compose** instalados em sua máquina.
+Certifique-se de possuir o **Docker** e o **Docker Compose** instalados e rodando em sua máquina.
 
 ### 2. Configuração das Variáveis de Ambiente (.env)
 Antes de rodar a aplicação, você deve criar um arquivo chamado `.env` na raiz do projeto. 
@@ -56,13 +56,13 @@ Use este comando para rodar a aplicação baixando as imagens prontas do **Docke
 2 - Execute o seguinte comando:
 
 ```
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yaml up -d
 ```
 
 > OBS: Caso você tenha volumes anteriores no seu Docker, talvez a aplicação não suba, rode antes o seguinte comando e depois o comando anterior
 
 ```
-docker compose -f docker-compose.prod.yml down -v
+docker compose -f docker-compose.prod.yaml down -v
 ```
 
 ---
