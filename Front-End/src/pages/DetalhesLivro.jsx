@@ -309,7 +309,7 @@ function DetalhesLivro({ onAddWishlist, onAddMeusLivros, meusLivros, wishlist, h
                                     </div>
                                     <div className="bg-yellow-50 px-2 py-1 rounded-lg">{renderEstrelas(comentario.nota)}</div>
                                 </div>
-                                <p className="text-gray-600 text-sm break-words overflow-hidden leading-relaxed">"{comentario.comentario}"</p>
+                                <p className="text-gray-600 text-sm break-words overflow-hidden leading-relaxed">{comentario.comentario}</p>
                             </div>
                         );
                     })}

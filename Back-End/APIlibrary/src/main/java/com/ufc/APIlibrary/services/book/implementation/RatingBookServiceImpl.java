@@ -24,7 +24,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.List;
 
 @Service
 public class RatingBookServiceImpl implements RatingBookService {
@@ -48,10 +47,10 @@ public class RatingBookServiceImpl implements RatingBookService {
         }
 
         User user = userRepository.findById(data.user_id())
-            .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(UserNotFoundException::new);
 
         Book book = bookRepository.findById(book_id)
-            .orElseThrow(BookNotFoundException::new);
+                .orElseThrow(BookNotFoundException::new);
 
         if (book.getAcquision_date() != null && book.getAcquision_date().isAfter(LocalDateTime.now())) {
             throw new BookNotAvailableException();
@@ -73,13 +72,14 @@ public class RatingBookServiceImpl implements RatingBookService {
         } else {
             if (data.nota() == -1) {
                 book.setCount_reading(book.getCount_reading() + 1);
-            }else {
+            } else {
                 book.setCount_read(book.getCount_read() + 1);
             }
             try {
                 this.wishlistService.removeFromWishList(new DatasForWishListDTO(user.getId(), book_id));
             } catch (WishListNotFoundException e) {
-                // Ignora se não estiver na wishlist, pois o objetivo é apenas garantir que saia de lá
+                // Ignora se não estiver na wishlist, pois o objetivo é apenas garantir que saia
+                // de lá
             }
             // Cria nova avaliação
             BookRating newRating = new BookRating(user, book, data.nota(), data.comentario());
@@ -110,31 +110,33 @@ public class RatingBookServiceImpl implements RatingBookService {
     @Override
     public Page<ReturnRatingBookDTO> listRatedForBooks(Integer book_id, Pageable pageable) {
         Page<BookRating> ratingsPage = repository.findByBookIdAndRatingGreaterThanEqual(book_id, 0, pageable);
-    
+
         return ratingsPage.map(rating -> new ReturnRatingBookDTO(
-            rating.getId().getUserId(),
-            rating.getUser().getUsername(),
-            rating.getUser().getProfile(),
-            rating.getRating(),
-            rating.getReview(),
-            rating.getDateReview()));
+                rating.getId().getUserId(),
+                rating.getUser().getUsername(),
+                rating.getUser().getProfile(),
+                rating.getRating(),
+                rating.getReview(),
+                rating.getDateReview()));
     }
 
-   @Override
-    public List<ReturnBookShortDTO> listRatedBooksByUser(Integer user_id) {
-    List<BookRating> ratings = repository.findByUserId(user_id);
-    
-        return ratings.stream().map(r -> new ReturnBookShortDTO(
-            r.getBook().getId(),
-            r.getBook().getTitle(),
-            r.getBook().getAuthor(),
-            resolveImagem(r.getBook()),
-            r.getBook().getRating_avg(),
-            r.getBook().getCategory(),
-            r.getRating(),
-            r.getReview(),
-            r.getBook().getPopularity_score(),
-            r.getBook().getAcquision_date())).toList();
+    @Override
+    public Page<ReturnBookShortDTO> listRatedBooksByUser(Integer userId, boolean apenasValidas, String search,
+            Pageable pageable) {
+
+        Page<BookRating> ratings = repository.findByUserIdWithSearch(userId, apenasValidas, search, pageable);
+
+        return ratings.map(r -> new ReturnBookShortDTO(
+                r.getBook().getId(),
+                r.getBook().getTitle(),
+                r.getBook().getAuthor(),
+                resolveImagem(r.getBook()),
+                r.getBook().getRating_avg(),
+                r.getBook().getCategory(),
+                r.getRating(),
+                r.getReview(),
+                r.getBook().getPopularity_score(),
+                r.getBook().getAcquision_date()));
     }
 
     private String resolveImagem(Book book) {
@@ -143,8 +145,8 @@ public class RatingBookServiceImpl implements RatingBookService {
         }
         if (book.getPreview_picture() != null) {
             return Base64.getEncoder()
-                .encodeToString(book.getPreview_picture());
-     }
+                    .encodeToString(book.getPreview_picture());
+        }
         return null;
     }
 }

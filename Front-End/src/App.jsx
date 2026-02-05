@@ -33,6 +33,9 @@ function App() {
 
   const [isLoadingBooks, setIsLoadingBooks] = useState(true);
 
+  const [hasMoreMeusLivros, setHasMoreMeusLivros] = useState(true);
+  const [hasMoreWishList, setHasMoreWishList] = useState(true);
+
   const [wishlist, setWishlist] = useState([]);
 
   const [meusLivros, setMeusLivros] = useState([]);
@@ -100,15 +103,19 @@ function App() {
     verifyNotifications();
   }, [user?.id]);
 
-  // Função para carregar Wishlist
-  const loadWishlistData = async () => {
+ // Função para carregar a Wishlist
+  const loadWishlistData = async (page = 0) => {
     if (!user?.id) {
       setWishlist([]);
       return;
     }
     try {
-      const data = await getUserWishlist(user.id);
-      setWishlist(Array.isArray(data) ? data : []);
+      const data = await getUserWishlist(user.id, page, 20);
+      
+      const list = data?.content || [];
+      setWishlist(list);
+      setHasMoreWishList(!data.last);
+
     } catch (error) {
       console.warn("[Wishlist] Lista vazia ou erro:", error);
       setWishlist([]);
@@ -116,21 +123,24 @@ function App() {
   };
 
   // Função para carregar Meus Livros
-  const loadMyBooksData = async () => {
+  const loadMyBooksData = async (page = 0) => {
     if (!user?.id) {
       setMeusLivros([]);
       return;
     }
     try {
-      const data = await getUserRatings(Number(user.id));
-      const formatted = (data || []).map((book) => ({
+      const data = await getUserRatings(Number(user.id), false, page, 20);
+      
+      const list = (data?.content || []).map((book) => ({
         ...book,
         avaliacao:
           book.nota !== undefined && book.nota !== null && book.nota !== -1
             ? Number(book.nota)
             : -1,
       }));
-      setMeusLivros(formatted);
+      
+      setMeusLivros(list);
+      setHasMoreMeusLivros(!data.last);
     } catch (error) {
       console.warn("[Meus Livros] Lista vazia ou erro:", error);
       setMeusLivros([]);
@@ -415,7 +425,7 @@ function App() {
         <div className="flex w-full h-screen overflow-hidden animate-in fade-in">
           <Sidebar logoClara={logoClara} />
 
-          <main className="flex-1 h-screen overflow-y-auto p-10 bg-white">
+          <main className="flex-1 h-screen overflow-y-auto p-0 bg-white">
             {/* A barra de busca no topo da página */}
             {/* A barra de busca foi removida daqui pois já existe no Catálogo */}
 
@@ -439,6 +449,8 @@ function App() {
               cacheBusca={cacheBusca}
               setCacheBusca={setCacheBusca}
               handleDeletarLivro={handleDeletarLivro}
+              hasMoreMeusLivrosGlobal={hasMoreMeusLivros}
+              hasMoreWishListGlobal={hasMoreWishList}
             />
           </main>
         </div>
@@ -465,6 +477,8 @@ function App() {
           cacheBusca={cacheBusca}
           setCacheBusca={setCacheBusca}
           handleDeletarLivro={handleDeletarLivro}
+          hasMoreMeusLivrosGlobal={hasMoreMeusLivros}
+          hasMoreWishListGlobal={hasMoreWishList}
         />
       )}
     </div>

@@ -1,6 +1,5 @@
 package com.ufc.APIlibrary.services.dashboard.implementation;
 
-import com.ufc.APIlibrary.domain.User.User;
 import com.ufc.APIlibrary.dto.dashboard.*;
 import com.ufc.APIlibrary.repositories.BookRatingRepository;
 import com.ufc.APIlibrary.repositories.WishListRepository;
@@ -8,7 +7,6 @@ import com.ufc.APIlibrary.services.dashboard.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
