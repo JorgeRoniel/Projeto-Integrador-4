@@ -232,8 +232,8 @@ function Catalogo({
   const temDadosIniciais = highlights?.length > 0 || Recomendation?.length > 0;
 
   return (
-    <div className="max-w-6xl mx-auto animate-in slide-in-from-bottom-4">
-      <div className="mb-10">
+    <div className="max-w-6xl mx-auto p-5 animate-in slide-in-from-bottom-4">
+      <div className="mb-6">
         <form
           onSubmit={(e) => e.preventDefault()}
           className="relative w-full max-w-2xl mx-auto"
@@ -317,7 +317,7 @@ function Catalogo({
               )}
 
               {!hasMore && (
-                <div className="text-center py-12 border-t border-gray-100 mt-8">
+                <div className="text-center border-t border-gray-100 mt-8">
                   <p className="text-gray-400 italic text-sm">
                     Você visualizou todos os livros encontrados.
                   </p>
@@ -355,7 +355,7 @@ function Catalogo({
           </div>
 
           {/* CONTAINER DO CARROSSEL COM PADDING NAS LATERAIS PARA AS SETAS */}
-          <div className="relative mb-12"
+          <div className="relative mb-8"
           style={{ 
                 paddingLeft: '3.5rem', 
                 paddingRight: '3.5rem'

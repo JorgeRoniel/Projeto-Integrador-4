@@ -180,7 +180,7 @@ function Dashboard() {
 
 
   return (
-    <div className="min-h-screen bg-[#0d1b2a] p-6 -m-10 animate-in fade-in">
+    <div className="min-h-screen bg-[#0d1b2a] p-6 animate-in fade-in">
       <div className="max-w-7xl mx-auto">
         {/* Linha 1: Stats cards principais */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

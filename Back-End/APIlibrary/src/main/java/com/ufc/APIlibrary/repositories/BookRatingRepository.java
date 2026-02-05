@@ -15,24 +15,40 @@ import java.util.List;
 public interface BookRatingRepository extends JpaRepository<BookRating, Integer> {
     List<BookRating> findByBookId(Integer BookId);
 
-    List<BookRating> findByUserId(Integer UserId);
-
     BookRating findByUserIdAndBookId(Integer userId, Integer bookId);
 
+    // Busca todas as avaliações (incluindo -1)
+    @Query("""
+                SELECT r FROM BookRating r
+                JOIN r.book b
+                WHERE r.user.id = :userId
+                AND (:apenasValidas = false OR r.rating <> -1)
+                AND (:search IS NULL OR TRIM(:search) = '' OR
+                    LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                    LOWER(b.author) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                    EXISTS (SELECT cat FROM b.category cat WHERE LOWER(cat) LIKE LOWER(CONCAT('%', :search, '%'))))
+            """)
+    Page<BookRating> findByUserIdWithSearch(
+            @Param("userId") Integer userId,
+            @Param("apenasValidas") boolean apenasValidas,
+            @Param("search") String search,
+            Pageable pageable);
+
+    // Busca avaliações de um livro com rating maior ou igual a minRating
     Page<BookRating> findByBookIdAndRatingGreaterThanEqual(Integer bookId, Integer minRating, Pageable pageable);
 
     @Query("""
-            SELECT COUNT(r)
-            FROM BookRating r
-            WHERE r.book.id = :bookId AND r.rating <> -1
-        """)
+                SELECT COUNT(r)
+                FROM BookRating r
+                WHERE r.book.id = :bookId AND r.rating <> -1
+            """)
     Integer countValidRatings(@Param("bookId") Integer bookId);
 
     @Query("""
-            SELECT COALESCE(SUM(r.rating), 0)
-            FROM BookRating r
-            WHERE r.book.id = :bookId AND r.rating <> -1
-        """)
+                SELECT COALESCE(SUM(r.rating), 0)
+                FROM BookRating r
+                WHERE r.book.id = :bookId AND r.rating <> -1
+            """)
     Integer sumValidRatings(@Param("bookId") Integer bookId);
 
     @Query("""
@@ -54,35 +70,35 @@ public interface BookRatingRepository extends JpaRepository<BookRating, Integer>
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end);
 
-   // Top autores
+    // Top autores
     @Query("""
-            SELECT r.book.author, AVG(r.rating)
-            FROM BookRating r
-            WHERE r.user.id = :userId AND r.rating <> -1
-            GROUP BY r.book.author
-            ORDER BY AVG(r.rating) DESC
-        """)
+                SELECT r.book.author, AVG(r.rating)
+                FROM BookRating r
+                WHERE r.user.id = :userId AND r.rating <> -1
+                GROUP BY r.book.author
+                ORDER BY AVG(r.rating) DESC
+            """)
     List<Object[]> findTopAuthorsByUser(@Param("userId") Integer userId, Pageable pageable);
 
     // Top categorias avaliadas
     @Query("""
-            SELECT c, AVG(r.rating)
-            FROM BookRating r
-            JOIN r.book.category c
-            WHERE r.user.id = :userId AND r.rating <> -1
-            GROUP BY c
-            ORDER BY AVG(r.rating) DESC
-        """)
+                SELECT c, AVG(r.rating)
+                FROM BookRating r
+                JOIN r.book.category c
+                WHERE r.user.id = :userId AND r.rating <> -1
+                GROUP BY c
+                ORDER BY AVG(r.rating) DESC
+            """)
     List<Object[]> findTopCategoriesByUser(@Param("userId") Integer userId, Pageable pageable);
 
     // Categorias mais lidas
     @Query("""
-            SELECT c, COUNT(r)
-            FROM BookRating r
-            JOIN r.book.category c
-            WHERE r.user.id = :userId
-            GROUP BY c
-            ORDER BY COUNT(r) DESC
-        """)
+                SELECT c, COUNT(r)
+                FROM BookRating r
+                JOIN r.book.category c
+                WHERE r.user.id = :userId
+                GROUP BY c
+                ORDER BY COUNT(r) DESC
+            """)
     List<Object[]> findMostReadCategoriesByUser(@Param("userId") Integer userId, Pageable pageable);
 }

@@ -31,7 +31,9 @@ function AppRoutes({
   refreshCatalogo,
   cacheBusca,
   setCacheBusca,
-  handleDeletarLivro
+  handleDeletarLivro,
+  hasMoreMeusLivrosGlobal,
+  hasMoreWishListGlobal
 }) {
   return (
     <Routes>
@@ -87,9 +89,11 @@ function AppRoutes({
         element={
           <ListaDesejo
             wishlist={wishlist}
+            setWishlist={setWishlist}
             onRemove={removerDaListaDesejo}
             onMoverParaMeusLivros={moverParaMeusLivros}
             onToggleNotification={handleToggleNotification}
+            hasMoreWishListGlobal={hasMoreWishListGlobal}
           />
         }
       />
@@ -101,6 +105,7 @@ function AppRoutes({
             meusLivros={meusLivros}
             setMeusLivros={setMeusLivros}
             atualizarAvaliacaoLivro={atualizarAvaliacaoLivro}
+            hasMoreMeusLivrosGlobal={hasMoreMeusLivrosGlobal}
           />
         }
       />

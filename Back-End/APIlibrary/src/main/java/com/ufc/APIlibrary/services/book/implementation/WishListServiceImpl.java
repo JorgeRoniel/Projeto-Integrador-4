@@ -21,6 +21,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -63,18 +66,18 @@ public class WishListServiceImpl implements WishListService {
     }
 
     @Override
-    public List<WishListDTO> listUsersWishes(Integer user_id) {
-    List<WishList> wl = repository.findByUserId(user_id);
-    
-        return wl.stream().map(w -> new WishListDTO(
-            w.getBook().getId(),
-            w.getBook().getTitle(),
-            w.getBook().getAuthor(),
-            resolveImagem(w.getBook()),
-            w.getBook().getRating_avg(),
-            w.getBook().getCategory(),
-            w.getNotification(),
-            w.getBook().getAcquision_date())).toList();
+    public Page<WishListDTO> listUsersWishes(Integer userId, String search, Pageable pageable) {
+        Page<WishList> wl = repository.findByUserIdWithSearch(userId, search, pageable);
+
+        return wl.map(w -> new WishListDTO(
+                w.getBook().getId(),
+                w.getBook().getTitle(),
+                w.getBook().getAuthor(),
+                resolveImagem(w.getBook()),
+                w.getBook().getRating_avg(),
+                w.getBook().getCategory(),
+                w.getNotification(),
+                w.getBook().getAcquision_date()));
     }
 
     private String resolveImagem(Book book) {
@@ -83,8 +86,8 @@ public class WishListServiceImpl implements WishListService {
         }
         if (book.getPreview_picture() != null) {
             return Base64.getEncoder()
-                .encodeToString(book.getPreview_picture());
-     }
+                    .encodeToString(book.getPreview_picture());
+        }
         return null;
     }
 
@@ -104,27 +107,26 @@ public class WishListServiceImpl implements WishListService {
     @Transactional
     public List<NotificationResponseDTO> checkAndGetNotifications(Integer userId) {
 
-    List<WishList> items = repository.findAllByUserIdAndNotificationTrue(userId);
-    
-    List<NotificationResponseDTO> notifications = new ArrayList<>();
-    LocalDateTime agora = LocalDateTime.now();
+        List<WishList> items = repository.findAllByUserIdAndNotificationTrue(userId);
 
-    for (WishList wl : items) {
+        List<NotificationResponseDTO> notifications = new ArrayList<>();
+        LocalDateTime agora = LocalDateTime.now();
 
-        if (wl.getBook().getAcquision_date().isBefore(agora) || 
-            wl.getBook().getAcquision_date().isEqual(agora)) {
-            
-            notifications.add(new NotificationResponseDTO(
-                wl.getBook().getId(), 
-                wl.getBook().getTitle()
-            ));
+        for (WishList wl : items) {
 
-            wl.setNotification(false);
-            repository.save(wl);
+            if (wl.getBook().getAcquision_date().isBefore(agora) ||
+                    wl.getBook().getAcquision_date().isEqual(agora)) {
+
+                notifications.add(new NotificationResponseDTO(
+                        wl.getBook().getId(),
+                        wl.getBook().getTitle()));
+
+                wl.setNotification(false);
+                repository.save(wl);
+            }
         }
-    }
-    
-    return notifications;
+
+        return notifications;
     }
 
     @Override
@@ -138,7 +140,7 @@ public class WishListServiceImpl implements WishListService {
         repository.delete(wl);
 
         Book book = bookRepository.findById(data.book_id())
-            .orElseThrow(BookNotFoundException::new);
+                .orElseThrow(BookNotFoundException::new);
 
         book.setCount_in_wishlist(Math.max(0, book.getCount_in_wishlist() - 1));
         book.updatePopularity(userRepository.count());

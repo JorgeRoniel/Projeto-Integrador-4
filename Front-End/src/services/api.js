@@ -311,16 +311,26 @@ export async function getBookRatings(bookId, page = 0, size = 10) {
 }
 
 /**
- * Lista livros avaliados por um usuário
+ * Lista livros avaliados por um usuário de forma paginada
  * @param {number} userId - ID do usuário
- * @returns {Promise<Array>}
+ * @param {boolean} apenasValidas - Se true, ignora notas -1
+ * @param {number} page - Página atual
+ * @param {number} size - Quantidade por página
+ * @returns {Promise<Object>} - Retorna o objeto Page do Spring
  */
-export async function getUserRatings(userId) {
-  return fetchAPI(`/api/user/ratings/${userId}`, {
+export async function getUserRatings(userId, apenasValidas = false, page = 0, size = 20, sort = "book.title,asc", search = "") {
+  const queryParams = new URLSearchParams({
+    apenasValidas: apenasValidas,
+    page: page,
+    size: size,
+    sort: sort,
+    search: search
+  }).toString();
+
+  return fetchAPI(`/api/user/ratings/${userId}?${queryParams}`, {
     method: "GET",
   });
 }
-
 // ==================== WISHLIST ====================
 
 /**
@@ -361,12 +371,21 @@ export async function getDashboardData(userId) {
 }
 
 /**
- * Lista a wishlist de um usuário
+ * Lista a wishlist de um usuário de forma paginada
  * @param {number} userId - ID do usuário
- * @returns {Promise<Array>}
+ * @param {number} page - Página atual
+ * @param {number} size - Quantidade por página
+ * @returns {Promise<Object>} - Retorna o objeto Page do Spring
  */
-export async function getUserWishlist(userId) {
-  return fetchAPI(`/api/user/${userId}/wishlist`, {
+export async function getUserWishlist(userId, page = 0, size = 20, search = "") {
+  const queryParams = new URLSearchParams({
+    page: page,
+    size: size,
+    sort: "book.title,asc",
+    search: search
+  }).toString();
+
+  return fetchAPI(`/api/user/${userId}/wishlist?${queryParams}`, {
     method: "GET",
   });
 }

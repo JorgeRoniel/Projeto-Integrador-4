@@ -1,5 +1,6 @@
 package com.ufc.APIlibrary.dto.book;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Size;
 
@@ -15,6 +16,6 @@ public record DoRatingBookDTO(
 ) {
     public DoRatingBookDTO
      {
-        comentario = (comentario == null || comentario.isBlank()) ? "" : comentario;
+        comentario = (comentario == null) ? "" : comentario.trim();
     }
 }

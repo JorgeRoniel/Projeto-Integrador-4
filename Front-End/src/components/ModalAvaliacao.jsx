@@ -31,11 +31,12 @@ const StarRatingInput = ({ rating, setRating }) => {
   );
 };
 
-    const getImageSrc = (img) => {
-        if (!img) return "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop";
-        if (img.startsWith('http') || img.startsWith('data:')) return img;
-        return `data:image/jpeg;base64,${img}`;
-    };
+const getImageSrc = (img) => {
+  if (!img)
+    return "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop";
+  if (img.startsWith("http") || img.startsWith("data:")) return img;
+  return `data:image/jpeg;base64,${img}`;
+};
 
 function ModalAvaliacao({
   isOpen,
@@ -50,7 +51,12 @@ function ModalAvaliacao({
   // Preencher campos quando abrir em modo de edição
   useEffect(() => {
     if (isOpen && livro) {
-      if (modoEdicao && livro.avaliacao && livro.avaliacao !== -1) {
+      if (
+        modoEdicao &&
+        livro.avaliacao !== undefined &&
+        livro.avaliacao !== null &&
+        livro.avaliacao !== -1
+      ) {
         setRating(livro.avaliacao);
         setComentario(livro.descricao || livro.comentario || "");
       } else {
@@ -60,20 +66,24 @@ function ModalAvaliacao({
     }
   }, [isOpen, livro, modoEdicao]);
 
-const handleSubmit = async () => {
-  try {
-    await onSubmit({
-      livroId: livro.id,
-      rating,
-      comentario,
-    });
-  
-    // O fechamento deve vir depois do sucesso da API
-    onClose(); 
-  } catch (err) {
-    console.error("A atualização falhou no componente.");
-  }
-};
+  const handleSubmit = async () => {
+    if (!comentario || comentario.trim().length < 3 || comentario.trim().length > 1000) {
+      toast.error("O comentário só pode ter entre 3 a 1000 caracteres");
+      return;
+    }
+    try {
+      await onSubmit({
+        livroId: livro.id,
+        rating: rating,
+        comentario: comentario.trim(),
+      });
+
+      // O fechamento deve vir depois do sucesso da API
+      onClose();
+    } catch (err) {
+      console.error("A atualização falhou no componente.");
+    }
+  };
 
   const handleClose = () => {
     setRating(0);

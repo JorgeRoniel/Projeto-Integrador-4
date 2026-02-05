@@ -39,7 +39,7 @@ public class BookRating implements Serializable {
     @Column(columnDefinition = "TEXT")
     private String review;
 
-    @Column(name = "date_review", columnDefinition = "TEXT")
+    @Column(name = "date_review")
     private LocalDateTime dateReview;
 
     public BookRating(User user, Book book, Integer rating, String review) {

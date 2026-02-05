@@ -13,15 +13,16 @@ import com.ufc.APIlibrary.dto.user.UpdateUserRoleDTO;
 import com.ufc.APIlibrary.services.book.RatingBookService;
 import com.ufc.APIlibrary.services.book.WishListService;
 import com.ufc.APIlibrary.services.user.UserServices;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import jakarta.validation.Valid;
-
 import java.util.List;
 
 @RestController
@@ -33,7 +34,6 @@ public class UserController {
     private RatingBookService ratingBookService;
     @Autowired
     private WishListService wishListService;
-    
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody @Valid RegisterUserDTO data) {
@@ -50,7 +50,8 @@ public class UserController {
 
     @PutMapping("/{id}/update")
     @PreAuthorize("#user_id == authentication.principal.id")
-    public ResponseEntity<Void> updateUserRoute(@PathVariable("id") Integer user_id, @RequestBody @Valid UpdateUserDTO data) {
+    public ResponseEntity<Void> updateUserRoute(@PathVariable("id") Integer user_id,
+            @RequestBody @Valid UpdateUserDTO data) {
         services.updateUser(user_id, data);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
@@ -64,22 +65,28 @@ public class UserController {
 
     @GetMapping("/ratings/{id}")
     @PreAuthorize("#user_id == authentication.principal.id")
-    public ResponseEntity<List<ReturnBookShortDTO>> listRatingsForUser(@PathVariable("id") Integer user_id) {
-        return ResponseEntity.ok(ratingBookService.listRatedBooksByUser(user_id));
+    public ResponseEntity<Page<ReturnBookShortDTO>> listRatingsForUser(
+            @PathVariable("id") Integer user_id,
+            @RequestParam(defaultValue = "false") boolean apenasValidas,
+            @RequestParam(required = false) String search,
+            Pageable pageable) {
+        return ResponseEntity.ok(ratingBookService.listRatedBooksByUser(user_id, apenasValidas, search, pageable));
     }
 
     @GetMapping("/{id}/wishlist")
     @PreAuthorize("#user_id == authentication.principal.id")
-    public ResponseEntity<List<WishListDTO>> listOfWishList(@PathVariable("id") Integer user_id) {
-        return ResponseEntity.ok(wishListService.listUsersWishes(user_id));
+    public ResponseEntity<Page<WishListDTO>> listOfWishList(
+            @PathVariable("id") Integer user_id,
+            @RequestParam(required = false) String search,
+            Pageable pageable) {
+        return ResponseEntity.ok(wishListService.listUsersWishes(user_id, search, pageable));
     }
 
     @PutMapping("/role/{username}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> updateUserRole(
-        @PathVariable String username,
-        @RequestBody UpdateUserRoleDTO data
-    ){
+            @PathVariable String username,
+            @RequestBody UpdateUserRoleDTO data) {
         services.updateUserRole(username, data.role());
         return ResponseEntity.ok().build();
     }
@@ -100,5 +107,5 @@ public class UserController {
     public ResponseEntity<Void> resetPasswordFinal(@RequestBody ResetPasswordDTO data) {
         services.resetPassword(data);
         return ResponseEntity.ok().build();
-}
+    }
 }
