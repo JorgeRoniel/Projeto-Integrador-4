@@ -1,25 +1,9 @@
 services:
-  postgres:
-    image: postgres:18.1
-    ports:
-      - "5433:5432"
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql
-    networks:
-      - app-network
-
   backend:
     build:
       context: ./Back-End/APIlibrary
       dockerfile: Dockerfile
     container_name: Back-End-PI4
-    depends_on:
-      postgres:
-        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: ${DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USER}

@@ -38,3 +38,6 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/library-frontend:v${{ github.run_number }}
           build-args: |
             VITE_API_URL=
+        
+      - name: Trigger Render Deploy (Backend)
+        run: curl -f ${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}
