@@ -15,11 +15,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 @EnableWebSecurity
 @org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class WebSecurityConfig {
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
     @Autowired
     private SecurityFilter filter;
 
@@ -57,7 +62,7 @@ public class WebSecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOrigins(java.util.List.of("http://localhost:3000", "http://localhost:5173"));
+        configuration.setAllowedOrigins(java.util.List.of("http://localhost:3000", "http://localhost:5173", frontendUrl));
         configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(java.util.List.of("*"));
         configuration.setAllowCredentials(false);
