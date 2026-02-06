@@ -2,6 +2,11 @@
 
 Este projeto utiliza **Docker** para facilitar a configuração e execução de todos os serviços (Banco de Dados, Backend e Frontend).
 
+- Acesse o serviço rodando em tempo real (disponível por tempo limitado):
+
+```
+https://projeto-integrador-4-a2vh.onrender.com/
+```
 ---
 
 <h1>Como executar a aplicação:</h1>
